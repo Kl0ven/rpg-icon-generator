@@ -23,6 +23,6 @@ jobs:
       - name: Test with nose
         run: |
           nosetests ./test/* 
-  build-n-publish:
-    name: Build and publish Python 🐍 distributions 📦 to PyPI and TestPyPI
-    runs-on: ubuntu-18.04
+  # build-n-publish:
+  #   name: Build and publish Python 🐍 distributions 📦 to PyPI and TestPyPI
+  #   runs-on: ubuntu-18.04
