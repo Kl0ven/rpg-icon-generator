@@ -11,7 +11,7 @@ This package generate RPG items images procedurally, based on [BrianMacIntosh Al
 
 ## Output example
 ### Blades
-![Blade_1](./docs/Blade_1.png) ![Blade_2](./docs/Blade_2.png) ![Blade_3](./docs/Blade_3.png)
+![Blade_1](https://github.com/Kl0ven/rpg-icon-generator/blob/master/docs/Blade_1.png) ![Blade_2](https://github.com/Kl0ven/rpg-icon-generator/blob/master/docs/Blade_2.png) ![Blade_3](https://github.com/Kl0ven/rpg-icon-generator/blob/master/docs/Blade_3.png)
 
 
 ## Usage
