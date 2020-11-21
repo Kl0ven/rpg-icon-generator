@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="rpg_icon_generator_Kloven",
-    version="0.0.1",
+    version="0.0.3",
     author="Jean-loup Monnier",
     author_email="jloup.m@gmail.com",
     description="This package generate RPG items images procedurallye",
