@@ -4,9 +4,9 @@ This package generate RPG items images procedurally, based on [BrianMacIntosh Al
 
 ## Item type
   - [x] Blade
-  - [] Potion
-  - [] Masses
-  - [] Axe
+  - [ ] Potion
+  - [ ] Masses
+  - [ ] Axe
   - More to come ;)
 
 ## Output example
