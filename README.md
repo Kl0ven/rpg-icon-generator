@@ -14,6 +14,12 @@ This package generate RPG items images procedurally, based on [BrianMacIntosh Al
 ![Blade_1](https://raw.githubusercontent.com/Kl0ven/rpg-icon-generator/master/docs/Blade_1.png) ![Blade_2](https://raw.githubusercontent.com/Kl0ven/rpg-icon-generator/master/docs/Blade_2.png) ![Blade_3](https://raw.githubusercontent.com/Kl0ven/rpg-icon-generator/master/docs/Blade_3.png)
 
 
+
+## instalation 
+
+```
+pip install rpg-icon-generator-Kloven
+```
 ## Usage
 
 ```python
@@ -22,5 +28,6 @@ generator = Blade_Generator()
 seed = datetime.now() # provide a seed for this blade 
 
 # the image will be in test/out/[seed].png
-generator.generate(seed=seed, dimension=32, output_directory='test/out/')
+# the image will be 32*2 by 32*2 pixels
+generator.generate(seed=seed, dimension=32, render_scale=2, output_directory='test/out/')
 ```
