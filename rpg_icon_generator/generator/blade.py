@@ -12,7 +12,8 @@ class Blade_Generator(Drawing):
         self.random = Random(seed)
         self.dimension = dimension
         self.bounds = Bound(0, 0, dimension, dimension)
-        self.bounds1 = Bound(1, 1, self.bounds.w - 2, self.bounds.h - 2)
+        s = 10
+        self.bounds1 = Bound(s, s, self.bounds.w - 2*s, self.bounds.h - 2*s)
         self.dscale = self.bounds.h / 32
 
         # length of the pommel
@@ -64,6 +65,67 @@ class Blade_Generator(Drawing):
         xguardMaxOmega = (xguardThickness-1)**2 * math.pi/7
         # size of each step in sampling the xguard curve
         xguardSampleStepSize = math.sqrt(2)
+
+        # produce xguard shape
+        currentPoint = Vector(params["positionDiag"], self.bounds.h - 1 - params["positionDiag"])
+        currentPoint = [currentPoint, Vector(currentPoint)]
+        xguardControlPoints = [[], []]
+        xguardAngle = [-math.pi * 3/4, math.pi/4]
+        xguardOmega = [0, 0]
+        for xguardProgress in float_range(0, params["halfLength"], xguardSampleStepSize):
+            for side in range(2):
+                velocity = Vector(math.cos(xguardAngle[side]), math.sin(xguardAngle[side]))
+                newPoint = Vector(currentPoint[side])
+                if side == 1:
+                    symmetricPoint = Vector(self.bounds.h - 1 - currentPoint[0].y, self.bounds.w - 1 - currentPoint[0].x)
+                    newPoint.lerpTo(symmetricPoint, xguardSymmetry)
+                newPoint.widthT = xguardThickness/2
+                newPoint.widthB = xguardThickness/2
+                newPoint.normal = Vector(velocity.y, -1 * velocity.x).multiplyScalar(side*2-1)
+                newPoint.dist = xguardProgress
+                xguardControlPoints[side].append(newPoint)
+            for side in range(2):
+                velocity = Vector(math.cos(xguardAngle[side]), math.sin(xguardAngle[side]))
+                if self.random.randomFloat() < xguardOmegaChance: 
+                            xguardOmega[side] += self.random.randomRangeFloat(-xguardOmegaAmount, xguardOmegaAmount)
+                            xguardOmega[side] = math.copysign(1, xguardOmega[side]) * min(xguardMaxOmega, abs(xguardOmega[side]))
+                xguardStep = Vector(velocity).multiplyScalar(xguardSampleStepSize)
+                currentPoint[side].addVector(xguardStep)
+                xguardAngle[side] += xguardOmega[side]
+        
+        for side in range(2):
+            controlPoints = xguardControlPoints[side]
+            for i in range(len(controlPoints)):
+                # calculate normalized distance
+                controlPoints[i].normalizedDist = controlPoints[i].dist / params["halfLength"]
+                # apply taper
+                controlPoints[i].widthT *= min(1, (1 - controlPoints[i].normalizedDist) / xguardTopTaper)
+                controlPoints[i].widthB *= min(1, (1 - controlPoints[i].normalizedDist) / xguardBottomTaper)
+
+        for x in range(self.bounds.w):
+            for y in range(self.bounds.h):
+                # find the minimum distance to the xguard core
+                # OPT: obviously inefficient
+                coreDistanceSq = 100000
+                bestPoint = None
+                for side in range(2):
+                    controlPoints = xguardControlPoints[side]
+                    for i in range(len(controlPoints)):
+                        distanceSq = controlPoints[i].distanceToSq(x, y)
+                        if distanceSq < coreDistanceSq:
+                            coreDistanceSq = distanceSq
+                            bestPoint = controlPoints[i]
+                dotProduct = bestPoint.normal.dotProduct(x - bestPoint.x, y - bestPoint.y)
+                useWidth = bestPoint.widthB if dotProduct < 0 else bestPoint.widthT
+                coreDistance = math.sqrt(coreDistanceSq)
+                if coreDistance <= useWidth:
+                    distFromTop = bestPoint.widthT + coreDistance if dotProduct < 0 else bestPoint.widthT - coreDistance;
+                    darkAmt = distFromTop / (bestPoint.widthB + bestPoint.widthT);
+                    self.draw_pixel(x, y, colorLerp(xguardColorLight, xguardColorDark, darkAmt))
+        return {
+            "colorLight": xguardColorLight,
+            "colorDark": xguardColorDark
+        }
 
     def _draw_grip_helper(self, hiltParams):
         # the radius of the hilt in pixel diagonals
@@ -132,6 +194,8 @@ class Blade_Generator(Drawing):
         bladeOmegaAmount = math.pi / 32
         # maximum absolute omega
         bladeMaxOmega = math.pi / 32
+
+        bladeOmegaDecay = 0.01
         # radius of the blade at its base
         bladeStartRadius = math.ceil(self.random.randomRange(2, 4) * self.dscale)
 
@@ -189,6 +253,7 @@ class Blade_Generator(Drawing):
             velocityScaled.set(velocity).multiplyScalar(bladeSampleStepSize)
             currentPoint.addVector(velocityScaled)
             currentDist += bladeSampleStepSize
+            omega *= bladeOmegaDecay 
             angle += omega * bladeSampleStepSize
         
         for pt in bladeCorePoints:
