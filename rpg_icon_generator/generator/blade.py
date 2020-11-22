@@ -12,9 +12,9 @@ class Blade_Generator(Drawing):
         self.random = Random(seed)
         self.dimension = dimension
         self.bounds = Bound(0, 0, dimension, dimension)
-        s = 10
-        self.bounds1 = Bound(s, s, self.bounds.w - 2*s, self.bounds.h - 2*s)
-        self.dscale = self.bounds.h / 32
+        s = 1
+        self.bounds1 = Bound(s, s, dimension - 2*s, dimension - 2*s)
+        self.dscale = self.bounds1.h / 32
 
         # length of the pommel
         pommelLength = math.ceil(
@@ -67,7 +67,8 @@ class Blade_Generator(Drawing):
         xguardSampleStepSize = math.sqrt(2)
 
         # produce xguard shape
-        currentPoint = Vector(params["positionDiag"], self.bounds.h - 1 - params["positionDiag"])
+        currentPoint = Vector(
+            params["positionDiag"], self.bounds1.h - params["positionDiag"])
         currentPoint = [currentPoint, Vector(currentPoint)]
         xguardControlPoints = [[], []]
         xguardAngle = [-math.pi * 3/4, math.pi/4]
@@ -77,7 +78,9 @@ class Blade_Generator(Drawing):
                 velocity = Vector(math.cos(xguardAngle[side]), math.sin(xguardAngle[side]))
                 newPoint = Vector(currentPoint[side])
                 if side == 1:
-                    symmetricPoint = Vector(self.bounds.h - 1 - currentPoint[0].y, self.bounds.w - 1 - currentPoint[0].x)
+                    symmetricPoint = Vector(
+                        self.bounds1.h - currentPoint[0].y, 
+                        self.bounds1.w - currentPoint[0].x)
                     newPoint.lerpTo(symmetricPoint, xguardSymmetry)
                 newPoint.widthT = xguardThickness/2
                 newPoint.widthB = xguardThickness/2
@@ -96,14 +99,15 @@ class Blade_Generator(Drawing):
         for side in range(2):
             controlPoints = xguardControlPoints[side]
             for i in range(len(controlPoints)):
+                controlPoints[i].addVector(Vector(self.bounds1.x*2, 0))
                 # calculate normalized distance
                 controlPoints[i].normalizedDist = controlPoints[i].dist / params["halfLength"]
                 # apply taper
                 controlPoints[i].widthT *= min(1, (1 - controlPoints[i].normalizedDist) / xguardTopTaper)
                 controlPoints[i].widthB *= min(1, (1 - controlPoints[i].normalizedDist) / xguardBottomTaper)
 
-        for x in range(self.bounds.w):
-            for y in range(self.bounds.h):
+        for x in range(self.bounds1.x, self.bounds1.w + self.bounds1.x):
+            for y in range(self.bounds1.y, self.bounds1.h + self.bounds1.y):
                 # find the minimum distance to the xguard core
                 # OPT: obviously inefficient
                 coreDistanceSq = 100000
@@ -152,7 +156,7 @@ class Blade_Generator(Drawing):
             color = colorLerp(hiltColorDark, hiltColorLight, gripWave)
 
             # determine draw parameters
-            core = Vector(al, self.bounds.h - 1 - al)
+            core = Vector(al + self.bounds1.x*2, self.bounds1.h - al)
             isOdd = (al % 1) != 0
             core.x = math.ceil(core.x)
             core.y = math.ceil(core.y)
@@ -218,7 +222,8 @@ class Blade_Generator(Drawing):
         # produce blade shape
         bladeCorePoints = []
         bladeStartOrtho = math.floor(startDiag / math.sqrt(2))
-        currentPoint = Vector(bladeStartOrtho, self.bounds.h - 1 - bladeStartOrtho)
+        currentPoint = Vector(bladeStartOrtho + self.bounds1.x*2,
+                            self.bounds1.h - bladeStartOrtho)
         currentDist = 0
         currentWidthL = bladeStartRadius
         currentWidthR = bladeStartRadius + self.random.randomRange(-1, 2)
@@ -281,6 +286,7 @@ class Blade_Generator(Drawing):
 
         for x in range(self.bounds.w):
             for y in range(self.bounds.h):
+                # self.draw_red_pixel(x, y)
                 # never draw behind first core point
                 dotProduct = bladeCorePoints[0].forward.dotProduct(x - bladeCorePoints[0].x, y - bladeCorePoints[0].y)
                 if dotProduct < 0:

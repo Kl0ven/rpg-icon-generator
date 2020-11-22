@@ -19,5 +19,9 @@ class Drawing(object):
         self.draw.savePng(path)
 
     def draw_pixel(self, x, y, c):
-        r = draw.Rectangle(x, -y + self.dimension, 1, 1, fill=self.get_color_string(c))
+        r = draw.Rectangle(x, -y + self.dimension - 1 , 1, 1, fill=self.get_color_string(c))
+        self.draw.append(r)
+
+    def draw_red_pixel(self, x, y):
+        r = draw.Rectangle(x, -y + self.dimension - 1, 1, 1, fill="red")
         self.draw.append(r)
