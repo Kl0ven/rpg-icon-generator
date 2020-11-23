@@ -5,7 +5,7 @@ from rpg_icon_generator.generator.__generator import Generator
 
 
 class Blade_Generator(Generator):
-    def generate(self, seed, dimension, render_scale, output_directory):
+    def generate(self, seed, dimension, render_scale, output_directory, complexity):
         self.reset_canvas(dimension, render_scale, output_directory)
         self.set_seed(seed)
         self.set_bounds(dimension)
@@ -47,4 +47,5 @@ class Blade_Generator(Generator):
         self._draw_round_ornament_helper(pommelParams)
 
         self._draw_border()
+        self._draw_rarity_border(complexity)
         self.export(seed)

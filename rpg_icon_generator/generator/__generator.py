@@ -1,9 +1,11 @@
 import math
+import copy
 from rpg_icon_generator.utils.vector import Vector
 from rpg_icon_generator.utils.color import hsv2rgb, colorDarken, colorRandomize, colorLerp, colorLighten, float_range, floatLerp
 from rpg_icon_generator.generator.__drawing import Drawing
 from rpg_icon_generator.utils.random import Random
 from rpg_icon_generator.utils.bound import Bound
+from rpg_icon_generator.utils.constants import RARITY_COLOR, RARITY_RANGE
 
 class Generator(Drawing):
     def set_seed(self, s):
@@ -372,3 +374,39 @@ class Generator(Drawing):
         
         for px, py in border_pixels:
             self.draw_pixel(px, py, {"r": 0, "g": 0,  "b": 0, "a": 1})
+
+    def _get_rarity_from_complexity(self, c):
+        for name, cplx in RARITY_RANGE.items():
+            if cplx[0] <= c <= cplx[1]:
+                return name
+
+    def _get_border_size_from_complexity(self, complexity):
+        rSpan = 100
+        min_border = 1
+        border_span = (self.dimension*0.25) - min_border
+
+        # Convert the left range into a 0-1 range (float)
+        valueScaled = float(complexity) / float(rSpan)
+
+        # Convert the 0-1 range into a value in the right range.
+        return int(min_border + (valueScaled * border_span))
+
+    def _draw_rarity_border(self, complexity):
+        rarity = self._get_rarity_from_complexity(complexity)
+        border_size = self._get_border_size_from_complexity(complexity)
+        master_color = RARITY_COLOR[rarity]
+        lighten_color = colorLighten(copy.copy(master_color), 0.3)
+        colors = [lighten_color]
+        for i in range(1, border_size):
+            c = copy.copy(master_color)
+            c["a"] -= i * (1/(border_size + 1))
+            colors.append(c)
+        width = self.bounds.w
+        height = self.bounds.h
+        for x in range(width):
+            for y in range(height):
+                pixel = self.get_pixel_data(x, y)
+                for n in range(border_size):
+                    if pixel[3] == 0 and (x == n or x == width - (1+n) or y == n or y == height - (1+n)):
+                        self.draw_pixel(x, y, colors[n])
+
