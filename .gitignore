@@ -2,6 +2,6 @@ __pycache__/
 .vscode/
 /test/out/*
 !test/out/.gitkeep 
-rpg_icon_generator_Kloven.egg-info/
+rpg_icon_generator.egg-info/
 dist/
 build/
