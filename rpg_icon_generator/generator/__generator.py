@@ -392,13 +392,15 @@ class Generator(Drawing):
         return int(min_border + (valueScaled * border_span))
 
     def _draw_rarity_border(self, complexity):
+        lighten_factor = 0.4
         rarity = self._get_rarity_from_complexity(complexity)
         border_size = self._get_border_size_from_complexity(complexity)
         master_color = RARITY_COLOR[rarity]
-        lighten_color = colorLighten(copy.copy(master_color), 0.3)
+        lighten_color = colorLighten(copy.copy(master_color), lighten_factor)
         colors = [lighten_color]
         for i in range(1, border_size):
-            c = copy.copy(master_color)
+            c = colorLighten(copy.copy(master_color),
+                             lighten_factor - (i * (lighten_factor/(border_size + 1))))
             c["a"] -= i * (1/(border_size + 1))
             colors.append(c)
         width = self.bounds.w
