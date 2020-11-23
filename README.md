@@ -18,7 +18,7 @@ This package generate RPG items images procedurally, based on [BrianMacIntosh Al
 ## instalation 
 
 ```
-pip install rpg-icon-generator-Kloven
+pip install rpg-icon-generator
 ```
 ## Usage
 
