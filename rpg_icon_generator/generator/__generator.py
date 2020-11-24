@@ -11,11 +11,11 @@ class Generator(Drawing):
     def set_seed(self, s):
         self.random = Random(s)
     
-    def set_bounds(self, dimension):
-        s = 1
-        self.bounds = Bound(0, 0, dimension, dimension)
-        self.bounds1 = Bound(s, s, dimension - 2*s, dimension - 2*s)
-        self.dscale = self.bounds1.h / 32
+    def set_drawing_bound(self, dimension):
+        s = 15
+        self.drawing_bound = Bound(0, 0, dimension, dimension)
+        self.turtle_bound = Bound(s, s, dimension - 2*s, dimension - 2*s)
+        self.dscale = self.turtle_bound.h / 32
 
 
     def _draw_crossguard_helper(self, params):
@@ -44,7 +44,7 @@ class Generator(Drawing):
 
         # produce xguard shape
         currentPoint = Vector(
-            params["positionDiag"], self.bounds1.h - params["positionDiag"])
+            params["positionDiag"], self.turtle_bound.h - params["positionDiag"])
         currentPoint = [currentPoint, Vector(currentPoint)]
         xguardControlPoints = [[], []]
         xguardAngle = [-math.pi * 3/4, math.pi/4]
@@ -56,8 +56,8 @@ class Generator(Drawing):
                 newPoint = Vector(currentPoint[side])
                 if side == 1:
                     symmetricPoint = Vector(
-                        self.bounds1.h - currentPoint[0].y,
-                        self.bounds1.w - currentPoint[0].x)
+                        self.turtle_bound.h - currentPoint[0].y,
+                        self.turtle_bound.w - currentPoint[0].x)
                     newPoint.lerpTo(symmetricPoint, xguardSymmetry)
                 newPoint.widthT = xguardThickness/2
                 newPoint.widthB = xguardThickness/2
@@ -81,7 +81,7 @@ class Generator(Drawing):
         for side in range(2):
             controlPoints = xguardControlPoints[side]
             for i in range(len(controlPoints)):
-                controlPoints[i].addVector(Vector(self.bounds1.x*2, 0))
+                controlPoints[i].addVector(Vector(self.turtle_bound.x*2, 0))
                 # calculate normalized distance
                 controlPoints[i].normalizedDist = controlPoints[i].dist / \
                     params["halfLength"]
@@ -91,8 +91,8 @@ class Generator(Drawing):
                 controlPoints[i].widthB *= min(
                     1, (1 - controlPoints[i].normalizedDist) / xguardBottomTaper)
 
-        for x in range(self.bounds1.x, self.bounds1.w + self.bounds1.x):
-            for y in range(self.bounds1.y, self.bounds1.h + self.bounds1.y):
+        for x in range(self.turtle_bound.x, self.turtle_bound.w + self.turtle_bound.x):
+            for y in range(self.turtle_bound.y, self.turtle_bound.h + self.turtle_bound.y):
                 # find the minimum distance to the xguard core
                 # OPT: obviously inefficient
                 coreDistanceSq = 100000
@@ -149,7 +149,7 @@ class Generator(Drawing):
             color = colorLerp(hiltColorDark, hiltColorLight, gripWave)
 
             # determine draw parameters
-            core = Vector(al + self.bounds1.x*2, self.bounds1.h - al)
+            core = Vector(al + self.turtle_bound.x*2, self.turtle_bound.h - al)
             isOdd = (al % 1) != 0
             core.x = math.ceil(core.x)
             core.y = math.ceil(core.y)
@@ -216,7 +216,7 @@ class Generator(Drawing):
         # produce blade shape
         bladeCorePoints = []
         bladeStartOrtho = math.floor(startDiag / math.sqrt(2))
-        currentPoint = Vector(bladeStartOrtho + self.bounds1.x*2, self.bounds1.h - bladeStartOrtho)
+        currentPoint = Vector(bladeStartOrtho + self.turtle_bound.x*2, self.turtle_bound.h - bladeStartOrtho)
         currentDist = 0
         currentWidthL = bladeStartRadius
         currentWidthR = bladeStartRadius + self.random.randomRange(-1, 2)
@@ -226,7 +226,7 @@ class Generator(Drawing):
         omega = 0  # velocity rotation in radians per pixel
 
         first = True
-        while first or self.bounds1.contains(currentPoint):
+        while first or self.turtle_bound.contains(currentPoint):
             first = False
 
             bladeWidthCosine = bladeWidthCosineAmp * \
@@ -282,8 +282,8 @@ class Generator(Drawing):
         # amount to darken blade far half
         bladeRightDarken = 0.5
 
-        for x in range(self.bounds.w):
-            for y in range(self.bounds.h):
+        for x in range(self.drawing_bound.w):
+            for y in range(self.drawing_bound.h):
                 # self.draw_red_pixel(x, y)
                 # never draw behind first core point
                 dotProduct = bladeCorePoints[0].forward.dotProduct(
@@ -356,8 +356,8 @@ class Generator(Drawing):
                     self.draw_pixel(x, y, colorLighten(colorLerp(pommelColorLight, pommelColorDark, darkAmt), lightAmt))
 
     def _draw_border(self):
-        width = self.bounds.w
-        height = self.bounds.h
+        width = self.drawing_bound.w
+        height = self.drawing_bound.h
         border_pixels = []
         for x in range(width):
             for y in range(height):
@@ -403,8 +403,8 @@ class Generator(Drawing):
                              lighten_factor - (i * (lighten_factor/(border_size + 1))))
             c["a"] -= i * (1/(border_size + 1))
             colors.append(c)
-        width = self.bounds.w
-        height = self.bounds.h
+        width = self.drawing_bound.w
+        height = self.drawing_bound.h
         for x in range(width):
             for y in range(height):
                 pixel = self.get_pixel_data(x, y)
