@@ -34,8 +34,8 @@ class Drawing(object):
         self.draw.append(r)
 
     # debug only
-    def draw_red_pixel(self, x, y):
-        r = draw.Rectangle(x, -y + self.dimension - 1, 1, 1, fill="red", fill_opacity=0.5)
+    def draw_red_pixel(self, x, y, a=0.2):
+        r = draw.Rectangle(x, -y + self.dimension - 1, 1, 1, fill="red", fill_opacity=a)
         self.draw.append(r)
 
     def get_pixel_data(self, x, y):

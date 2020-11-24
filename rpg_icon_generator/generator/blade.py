@@ -8,7 +8,7 @@ class Blade_Generator(Generator):
     def generate(self, seed, dimension, render_scale, output_directory, complexity):
         self.reset_canvas(dimension, render_scale, output_directory)
         self.set_seed(seed)
-        self.set_drawing_bound(dimension)
+        self.set_drawing_bound(dimension, complexity)
         
 
         # length of the pommel
@@ -39,7 +39,7 @@ class Blade_Generator(Generator):
         # draw the pommel
         pommelRadius = pommelLength * math.sqrt(2) / 2
         pommelParams = {
-            "center": Vector(math.floor(pommelRadius + 1) + self.turtle_bound.x*2, math.ceil(self.turtle_bound.h - pommelRadius - 1)),
+            "center": Vector(math.floor(pommelRadius + self.turtle_bound.x), math.ceil(self.drawing_bound.h - (pommelRadius + self.turtle_bound.y))),
             "radius": pommelRadius,
             "colorLight": crossguardResults["colorLight"],
             "colorDark": crossguardResults["colorDark"]
@@ -48,7 +48,4 @@ class Blade_Generator(Generator):
 
         self._draw_border()
         self._draw_rarity_border(complexity)
-        for x in range(self.turtle_bound.x, self.turtle_bound.w + self.turtle_bound.x):
-            for y in range(self.turtle_bound.y, self.turtle_bound.h + self.turtle_bound.y):
-                self.draw_red_pixel(x, y)
         self.export(seed)

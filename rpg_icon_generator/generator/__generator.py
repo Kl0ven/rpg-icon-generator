@@ -11,13 +11,17 @@ class Generator(Drawing):
     def set_seed(self, s):
         self.random = Random(s)
     
-    def set_drawing_bound(self, dimension):
-        s = 15
+    def set_drawing_bound(self, dimension, complexity):
+        s = self._get_turtle_bound_offset_from_complexity(complexity)
         self.drawing_bound = Bound(0, 0, dimension, dimension)
         self.turtle_bound = Bound(s, s, dimension - 2*s, dimension - 2*s)
         self.dscale = self.turtle_bound.h / 32
 
-
+    def _get_turtle_bound_offset_from_complexity(self, c):
+        out =  math.ceil((0.4 + ((-0.4 / 100) * c)) * self.dimension)
+        if out < 5:
+            out = 5
+        return out
     def _draw_crossguard_helper(self, params):
         # the color of the xguard
         xguardColorLight = hsv2rgb(self.random.randomRange(
@@ -44,7 +48,7 @@ class Generator(Drawing):
 
         # produce xguard shape
         currentPoint = Vector(
-            params["positionDiag"], self.turtle_bound.h - params["positionDiag"])
+            params["positionDiag"], self.drawing_bound.h - params["positionDiag"])
         currentPoint = [currentPoint, Vector(currentPoint)]
         xguardControlPoints = [[], []]
         xguardAngle = [-math.pi * 3/4, math.pi/4]
@@ -56,8 +60,8 @@ class Generator(Drawing):
                 newPoint = Vector(currentPoint[side])
                 if side == 1:
                     symmetricPoint = Vector(
-                        self.turtle_bound.h - currentPoint[0].y,
-                        self.turtle_bound.w - currentPoint[0].x)
+                        self.drawing_bound.h - currentPoint[0].y,
+                        self.drawing_bound.w - currentPoint[0].x)
                     newPoint.lerpTo(symmetricPoint, xguardSymmetry)
                 newPoint.widthT = xguardThickness/2
                 newPoint.widthB = xguardThickness/2
@@ -81,7 +85,7 @@ class Generator(Drawing):
         for side in range(2):
             controlPoints = xguardControlPoints[side]
             for i in range(len(controlPoints)):
-                controlPoints[i].addVector(Vector(self.turtle_bound.x*2, 0))
+                controlPoints[i].addVector(Vector(self.turtle_bound.x, - self.turtle_bound.y))
                 # calculate normalized distance
                 controlPoints[i].normalizedDist = controlPoints[i].dist / \
                     params["halfLength"]
@@ -149,7 +153,7 @@ class Generator(Drawing):
             color = colorLerp(hiltColorDark, hiltColorLight, gripWave)
 
             # determine draw parameters
-            core = Vector(al + self.turtle_bound.x*2, self.turtle_bound.h - al)
+            core = Vector(al + self.turtle_bound.x, self.drawing_bound.h - (al + self.turtle_bound.y))
             isOdd = (al % 1) != 0
             core.x = math.ceil(core.x)
             core.y = math.ceil(core.y)
@@ -216,7 +220,8 @@ class Generator(Drawing):
         # produce blade shape
         bladeCorePoints = []
         bladeStartOrtho = math.floor(startDiag / math.sqrt(2))
-        currentPoint = Vector(bladeStartOrtho + self.turtle_bound.x*2, self.turtle_bound.h - bladeStartOrtho)
+        currentPoint = Vector(
+            bladeStartOrtho + self.turtle_bound.x,self.drawing_bound.h - (bladeStartOrtho + self.turtle_bound.y))
         currentDist = 0
         currentWidthL = bladeStartRadius
         currentWidthR = bladeStartRadius + self.random.randomRange(-1, 2)

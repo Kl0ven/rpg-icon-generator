@@ -9,7 +9,6 @@ class Test_blade_generation(unittest.TestCase):
     def test_generation(self):
         generator = Blade_Generator()
         seed = datetime.now()
-        seed = 'coucou'
         generator.generate(seed=seed, dimension=64, render_scale=2, output_directory='./test/out/', complexity=50)
         self.assertTrue(os.path.isfile("./test/out/{}.png".format(seed)))
 
