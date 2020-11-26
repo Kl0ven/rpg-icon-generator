@@ -12,8 +12,10 @@ class Random:
         return v * v
 
     def randomRange(self, a, b):
-        return random.randrange(a, b)
-
+        try:
+            return random.randrange(a, b)
+        except ValueError:
+            return a
     def randomRangeFloat(self, a, b):
         return random.uniform(a, b)
 
