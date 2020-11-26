@@ -1,11 +1,16 @@
 import setuptools
 
+requirements = [
+    "drawSvg==1.7.0", 
+    "numpy==1.19.4"
+]
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="rpg_icon_generator_Kloven",
-    version="0.1.0",
+    name="rpg_icon_generator",
+    version="0.1.1",
     author="Jean-loup Monnier",
     author_email="jloup.m@gmail.com",
     description="This package generate RPG items images procedurallye",
@@ -19,4 +24,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
+    install_requires=requirements
 )
