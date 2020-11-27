@@ -1,7 +1,7 @@
 import math
 import copy
 from rpg_icon_generator.utils.vector import Vector
-from rpg_icon_generator.utils.color import hsv2rgb, colorLerp, Color
+from rpg_icon_generator.utils.color import Color
 from rpg_icon_generator.utils.misc import float_range, floatLerp
 from rpg_icon_generator.generator.__drawing import Drawing
 from rpg_icon_generator.utils.random import Random
@@ -25,7 +25,7 @@ class Generator(Drawing):
         return out
     def _draw_crossguard_helper(self, params):
         # the color of the xguard
-        xguardColorLight = hsv2rgb(self.random.randomRange(
+        xguardColorLight = Color.hsv2rgb(self.random.randomRange(
             0, 360), self.random.randomFloatLow()*0.5, self.random.randomRangeFloat(0.7, 1))
         # the shadow color of the xguard
         xguardColorDark = xguardColorLight.copy().colorDarken(0.6)
@@ -118,7 +118,7 @@ class Generator(Drawing):
                         coreDistance if dotProduct < 0 else bestPoint.widthT - coreDistance
                     darkAmt = distFromTop / \
                         (bestPoint.widthB + bestPoint.widthT)
-                    self.draw_pixel(x, y, colorLerp(
+                    self.draw_pixel(x, y, Color.colorLerp(
                         xguardColorLight, xguardColorDark, darkAmt))
         return {
             "colorLight": xguardColorLight,
@@ -140,7 +140,7 @@ class Generator(Drawing):
         hiltWaveAmplitude = math.ceil(
             self.random.randomRange(1, 3) * self.dscale)
         # the color of the hilt
-        hiltColorLight = hsv2rgb(self.random.randomRange(
+        hiltColorLight = Color.hsv2rgb(self.random.randomRange(
             0, 360), self.random.randomFloat(), self.random.randomRangeFloat(0.7, 1))
         # the color of the hilt inner shadows
         hiltColorDark = hiltColorLight.copy().colorDarken(1)
@@ -151,7 +151,7 @@ class Generator(Drawing):
         for l in float_range(0, hiltParams["lengthDiag"], 0.5):
             al = hiltParams["startDiag"] + l
             gripWave = abs(math.cos(math.pi * 2 * l / hiltWavelength))
-            color = colorLerp(hiltColorDark, hiltColorLight, gripWave)
+            color = Color.colorLerp(hiltColorDark, hiltColorLight, gripWave)
 
             # determine draw parameters
             core = Vector(al + self.turtle_bound.x, self.drawing_bound.h - (al + self.turtle_bound.y))
@@ -278,7 +278,7 @@ class Generator(Drawing):
             "s": self.random.randomFloatExtreme() * 0.6 if self.random.randomFloat() < 0.3 else 0,
             "v": self.random.randomRangeFloat(0.75, 1)
         }
-        colorBladeLinearTip = hsv2rgb(**colorBladeLinearTipHsv)
+        colorBladeLinearTip = Color.hsv2rgb(**colorBladeLinearTipHsv)
         # forward-axis color of the blade at the hilt
         colorBladeLinearHilt = colorBladeLinearTip.copy().colorDarken(0.7).colorRandomize(16, self.random)
         # amount to lighten blade edge
@@ -317,7 +317,7 @@ class Generator(Drawing):
                 useWidth = bestPoint.widthL if dotProduct < 0 else bestPoint.widthR
                 coreDistance = bestPoint.distanceTo(x, y)
                 if coreDistance <= useWidth or coreDistance <= minimumBladeWidth:
-                    color = colorLerp(
+                    color = Color.colorLerp(
                         colorBladeLinearHilt, colorBladeLinearTip, bestPoint.normalizedDist)
 
                     # do not change core
@@ -333,7 +333,7 @@ class Generator(Drawing):
                             edgeAmount = (
                                 coreDistance - edgeWidthMin) / bladeEdgeWidth
                             edgeAmount = 1 - (1-edgeAmount)*(1-edgeAmount)
-                            color = colorLerp(
+                            color = Color.colorLerp(
                                 nonEdgeColor, edgeColor, edgeAmount)
 
                     self.draw_pixel(x, y, color)
@@ -357,7 +357,7 @@ class Generator(Drawing):
                     highlightDist = highlightCenter.distanceTo(x, y)
                     darkAmt = 1-min(1, 0.8 * shadowDist / pommelRadius)
                     lightAmt = 1-min(1, highlightDist / pommelRadius)
-                    self.draw_pixel(x, y, colorLerp(pommelColorLight, pommelColorDark, darkAmt).colorLighten(lightAmt))
+                    self.draw_pixel(x, y, Color.colorLerp(pommelColorLight, pommelColorDark, darkAmt).colorLighten(lightAmt))
 
     def _draw_border(self):
         width = self.drawing_bound.w

@@ -36,22 +36,18 @@ class Color:
     def to_hex(self):
         return '#{:02x}{:02x}{:02x}'.format(math.floor(self.r), math.floor(self.g), math.floor(self.b))
 
+    @staticmethod
+    def hsv2rgb(h, s, v):
+        r, g, b = tuple(round(i * 255) for i in colorsys.hsv_to_rgb(h, s, v))
+        return Color(r, g, b)
 
-
-def hsv2rgb(h, s, v):
-    r, g, b = tuple(round(i * 255) for i in colorsys.hsv_to_rgb(h, s, v))
-    return Color(r, g, b)
-
-
-
-def colorLerp(a, b, t):
-    t = max(0, min(1, t))
-
-    cr = (b.r - a.r) * t + a.r
-    cg = (b.g - a.g) * t + a.g
-    cb = (b.b - a.b) * t + a.b
-
-    aa = a.a
-    ba = b.a
-    ca = (ba - aa) * t + aa
-    return Color(cr, cg, cb, ca)
+    @staticmethod
+    def colorLerp(a, b, t):
+        t = max(0, min(1, t))
+        cr = (b.r - a.r) * t + a.r
+        cg = (b.g - a.g) * t + a.g
+        cb = (b.b - a.b) * t + a.b
+        aa = a.a
+        ba = b.a
+        ca = (ba - aa) * t + aa
+        return Color(cr, cg, cb, ca)
