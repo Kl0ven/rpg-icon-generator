@@ -1,8 +1,7 @@
 import setuptools
 
 requirements = [
-    "drawSvg==1.7.0", 
-    "numpy==1.19.4"
+    "drawSvg==1.7.0"
 ]
 
 with open("README.md", "r") as fh:
@@ -10,7 +9,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="rpg_icon_generator",
-    version="0.1.1",
+    version="0.2.0",
     author="Jean-loup Monnier",
     author_email="jloup.m@gmail.com",
     description="This package generate RPG items images procedurallye",
