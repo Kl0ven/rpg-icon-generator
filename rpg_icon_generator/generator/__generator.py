@@ -410,8 +410,8 @@ class Generator(Drawing):
         height = self.drawing_bound.h
         for x in range(width):
             for y in range(height):
-                pixel = self.get_pixel_data(x, y)
                 for n in range(border_size):
+                    pixel = self.get_pixel_data(x, y)
                     if pixel.a == 0 and (x == n or x == width - (1+n) or y == n or y == height - (1+n)):
                         self.draw_pixel(x, y, colors[n])
 

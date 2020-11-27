@@ -51,3 +51,10 @@ class Color:
         ba = b.a
         ca = (ba - aa) * t + aa
         return Color(cr, cg, cb, ca)
+
+    @staticmethod
+    def random_color(random):
+        r = random.randomRange(0, 256)
+        g = random.randomRange(0, 256)
+        b = random.randomRange(0, 256)
+        return Color(r, g, b)
