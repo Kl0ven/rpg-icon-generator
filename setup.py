@@ -1,8 +1,7 @@
 import setuptools
 
 requirements = [
-    "drawSvg==1.7.0", 
-    "numpy==1.19.4"
+    "drawSvg==1.7.0"
 ]
 
 with open("README.md", "r") as fh:

@@ -1,7 +1,8 @@
 import math
 import copy
 from rpg_icon_generator.utils.vector import Vector
-from rpg_icon_generator.utils.color import hsv2rgb, colorDarken, colorRandomize, colorLerp, colorLighten, float_range, floatLerp
+from rpg_icon_generator.utils.color import hsv2rgb, colorLerp, Color
+from rpg_icon_generator.utils.misc import float_range, floatLerp
 from rpg_icon_generator.generator.__drawing import Drawing
 from rpg_icon_generator.utils.random import Random
 from rpg_icon_generator.utils.bound import Bound
@@ -27,7 +28,7 @@ class Generator(Drawing):
         xguardColorLight = hsv2rgb(self.random.randomRange(
             0, 360), self.random.randomFloatLow()*0.5, self.random.randomRangeFloat(0.7, 1))
         # the shadow color of the xguard
-        xguardColorDark = colorDarken(xguardColorLight, 0.6)
+        xguardColorDark = xguardColorLight.copy().colorDarken(0.6)
         # the amount of symmetry for the xguard
         xguardSymmetry = 0 if self.random.randomFloat() < 0.3 else 1
         # the thickness of the xguard
@@ -142,7 +143,7 @@ class Generator(Drawing):
         hiltColorLight = hsv2rgb(self.random.randomRange(
             0, 360), self.random.randomFloat(), self.random.randomRangeFloat(0.7, 1))
         # the color of the hilt inner shadows
-        hiltColorDark = colorDarken(hiltColorLight, 1)
+        hiltColorDark = hiltColorLight.copy().colorDarken(1)
 
         # start location of the hilt(diagonal axis, diagonal pixels)
         hiltRadiusOdd = (hiltRadius % 2) != 0
@@ -169,8 +170,7 @@ class Generator(Drawing):
             # draw grip line
             for h in range(left, right+1):
                 darkenAmt = max(0, h + hiltRadius) / (hiltRadius*4)
-                self.draw_pixel(core.x + h, core.y + h,
-                                colorDarken(color, darkenAmt))
+                self.draw_pixel(core.x + h, core.y + h, color.copy().colorDarken(darkenAmt))
 
     def _draw_blade_helper(self, startDiag):
         # determines the angle of the taper of the blade tip(as a ratio of the blade length)
@@ -280,8 +280,7 @@ class Generator(Drawing):
         }
         colorBladeLinearTip = hsv2rgb(**colorBladeLinearTipHsv)
         # forward-axis color of the blade at the hilt
-        colorBladeLinearHilt = colorRandomize(
-            colorDarken(colorBladeLinearTip, 0.7), 16, self.random)
+        colorBladeLinearHilt = colorBladeLinearTip.copy().colorDarken(0.7).colorRandomize(16, self.random)
         # amount to lighten blade edge
         bladeEdgeLighten = 0.5
         # amount to darken blade far half
@@ -325,8 +324,8 @@ class Generator(Drawing):
                     if bestPoint.x == x and bestPoint.y == y:
                         pass
                     else:
-                        edgeColor = colorLighten(color, bladeEdgeLighten)
-                        darkColor = colorDarken(color, bladeRightDarken)
+                        edgeColor = color.copy().colorLighten(bladeEdgeLighten)
+                        darkColor = color.copy().colorDarken(bladeRightDarken)
                         nonEdgeColor = darkColor if dotProduct > 0 else color
                         # lighten edge
                         if useWidth > bladeCoreEdgeExcludeWidth:
@@ -358,7 +357,7 @@ class Generator(Drawing):
                     highlightDist = highlightCenter.distanceTo(x, y)
                     darkAmt = 1-min(1, 0.8 * shadowDist / pommelRadius)
                     lightAmt = 1-min(1, highlightDist / pommelRadius)
-                    self.draw_pixel(x, y, colorLighten(colorLerp(pommelColorLight, pommelColorDark, darkAmt), lightAmt))
+                    self.draw_pixel(x, y, colorLerp(pommelColorLight, pommelColorDark, darkAmt).colorLighten(lightAmt))
 
     def _draw_border(self):
         width = self.drawing_bound.w
@@ -368,17 +367,17 @@ class Generator(Drawing):
             for y in range(height):
                 pixel = self.get_pixel_data(x, y)
                 # if this pixel is empty or edge
-                if pixel[3] == 0 or x == 0 or x == width - 1 or y == 0 or y == height - 1:
+                if pixel.a == 0 or x == 0 or x == width - 1 or y == 0 or y == height - 1:
                     # and any orthogonal pixel isn't
                     nxPix = self.get_pixel_data(x-1, y)
                     nyPix = self.get_pixel_data(x, y-1)
                     pxPix = self.get_pixel_data(x+1, y)
                     pyPix = self.get_pixel_data(x, y+1)
-                    if x > 0 and nxPix[3] > 0 or x < width - 2 and pxPix[3] > 0 or y > 0 and nyPix[3] > 0 or y < height - 2 and pyPix[3] > 0:
+                    if x > 0 and nxPix.a > 0 or x < width - 2 and pxPix.a > 0 or y > 0 and nyPix.a > 0 or y < height - 2 and pyPix.a > 0:
                         border_pixels.append((x, y))
         
         for px, py in border_pixels:
-            self.draw_pixel(px, py, {"r": 0, "g": 0,  "b": 0, "a": 1})
+            self.draw_pixel(px, py, Color(0, 0, 0))
 
     def _get_rarity_from_complexity(self, c):
         for name, cplx in RARITY_RANGE.items():
@@ -400,13 +399,12 @@ class Generator(Drawing):
         lighten_factor = 0.4
         rarity = self._get_rarity_from_complexity(complexity)
         border_size = self._get_border_size_from_complexity(complexity)
-        master_color = RARITY_COLOR[rarity]
-        lighten_color = colorLighten(copy.copy(master_color), lighten_factor)
+        master_color = Color(**RARITY_COLOR[rarity])
+        lighten_color = master_color.copy().colorLighten(lighten_factor)
         colors = [lighten_color]
         for i in range(1, border_size):
-            c = colorLighten(copy.copy(master_color),
-                             lighten_factor - (i * (lighten_factor/(border_size + 1))))
-            c["a"] -= i * (1/(border_size + 1))
+            c = master_color.copy().colorLighten(lighten_factor - (i * (lighten_factor/(border_size + 1))))
+            c.a -= i * (1/(border_size + 1))
             colors.append(c)
         width = self.drawing_bound.w
         height = self.drawing_bound.h
@@ -414,6 +412,6 @@ class Generator(Drawing):
             for y in range(height):
                 pixel = self.get_pixel_data(x, y)
                 for n in range(border_size):
-                    if pixel[3] == 0 and (x == n or x == width - (1+n) or y == n or y == height - (1+n)):
+                    if pixel.a == 0 and (x == n or x == width - (1+n) or y == n or y == height - (1+n)):
                         self.draw_pixel(x, y, colors[n])
 
