@@ -20,20 +20,25 @@ class Drawing(object):
         self.draw.savePng(path)
 
     def draw_pixel(self, x, y, c):
-        x = int(x)
-        y = int(y)
+        x = round(x)
+        y = round(y)
         self.image[x][y] = c
         r = draw.Rectangle(x, -y + self.dimension - 1, 1, 1, fill=c.to_hex(), fill_opacity=c.a)
         self.draw.append(r)
     
     def fill_rect(self, x, y, w, h, c):
-        for i in range(int(x), int(x+w)):
-            for j in range(int(y), int(y+h)):
+        for i in range(round(x), round(x+w)):
+            for j in range(round(y), round(y+h)):
                 self.draw_pixel(i, j, c) 
 
     # debug only
     def draw_red_pixel(self, x, y, a=0.2):
-        r = draw.Rectangle(x, -y + self.dimension - 1, 1, 1, fill="red", fill_opacity=a)
+        r = draw.Rectangle(round(x), round(-y + self.dimension - 1), 1, 1, fill="red", fill_opacity=a)
+        self.draw.append(r)
+
+    # debug only
+    def draw_green_pixel(self, x, y, a=0.2):
+        r = draw.Rectangle(round(x), round(-y + self.dimension - 1), 1, 1, fill="green", fill_opacity=a)
         self.draw.append(r)
 
     def get_pixel_data(self, x, y):

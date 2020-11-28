@@ -6,7 +6,7 @@ This package generate RPG items images procedurally, based on [BrianMacIntosh Al
   - [x] Blade
   - [x] Potion
   - [ ] Masses
-  - [ ] Axe
+  - [ ] Axes
   - More to come ;)
 
 ## Output example
