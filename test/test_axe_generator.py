@@ -10,7 +10,7 @@ class Test_axe_generation(unittest.TestCase):
     def test_generation(self):
         generator = Axe_Generator()
         seed = datetime.now()
-        seed = "2020-11-28 16:21:48.3239803"
+        seed = "2020-11-28 20:44:43.6896078"
         generator.generate(seed=seed, dimension=64, render_scale=2, output_directory='./test/out/', complexity=50)
         self.assertTrue(os.path.isfile("./test/out/{}.png".format(seed)))
 

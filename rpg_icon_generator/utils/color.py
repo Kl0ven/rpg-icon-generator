@@ -38,7 +38,7 @@ class Color:
 
     @staticmethod
     def hsv2rgb(h, s, v):
-        r, g, b = tuple(round(i * 255) for i in colorsys.hsv_to_rgb(h, s, v))
+        r, g, b = tuple(round(i * 255) for i in colorsys.hsv_to_rgb(h/360, s, v))
         return Color(r, g, b)
 
     @staticmethod

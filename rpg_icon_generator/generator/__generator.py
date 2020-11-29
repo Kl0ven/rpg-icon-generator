@@ -16,6 +16,7 @@ class Generator(Drawing):
     
     def set_drawing_bound(self, dimension, complexity):
         s = self._get_turtle_bound_offset_from_complexity(complexity)
+        self.center = self.dimension/2
         self.drawing_bound = Bound(0, 0, dimension, dimension)
         self.turtle_bound = Bound(s, s, dimension - 2*s, dimension - 2*s)
         self.dscale = self.turtle_bound.h / 32
@@ -170,6 +171,7 @@ class Generator(Drawing):
             for h in range(left, right+1):
                 darkenAmt = max(0, h + hiltRadius) / (hiltRadius*4)
                 self.draw_pixel(core.x + h, core.y + h, color.copy().colorDarken(darkenAmt))
+        return hiltRadius
 
     def _draw_blade_helper(self, startDiag):
         # determines the angle of the taper of the blade tip(as a ratio of the blade length)
@@ -414,7 +416,7 @@ class Generator(Drawing):
                     if pixel.a == 0 and (x == n or x == width - (1+n) or y == n or y == height - (1+n)):
                         self.draw_pixel(x, y, colors[n])
 
-    def _draw_axe_blade_helper(self, origine, offset, body_width=5, body_heigth=10):
+    def _draw_axe_blade_helper(self, origine, offset, body_width=5, body_heigth=10, axe_width=15):
         # the color of the axe
         colorAxeLinearTipHsv = Color.hsv2rgb(
             self.random.randomRangeFloat(0, 360),
@@ -426,13 +428,13 @@ class Generator(Drawing):
         axeColorDark = colorAxeLinearTipHsv.copy().colorDarken(0.5)
         # the amount of symmetry for the axe
         axeSymmetry = 0 if self.random.randomFloat() < 0.3 else 1
+
+        # the amount of symmetry for the axe on second axis
+        axeSymmetry2 = 0 if self.random.randomFloat() < 0.2 else 1
         # the thickness of the axe
         axeThickness = self.random.randomRangeFloatHigh(1, 2.5)
         # the bottom taper of the axe
         axeBottomTaper = self.random.randomFloat()
-        # the top taper of the axe
-        axeTopTaper = floatLerp(self.random.randomFloat(
-        ), axeBottomTaper, self.random.randomFloatExtreme())
         # chance for the axe to acquire a curve (per pixel)
         axeOmegaChance = 0.6
         # max magnitude of axe omega add
@@ -441,14 +443,13 @@ class Generator(Drawing):
         axeMaxOmega = ((axeThickness-1)**2 * math.pi/7)*0.2
         # size of each step in sampling the axe curve
         axeSampleStepSize = math.sqrt(2)
-        # with af the axe
-        axe_width = 15
+        
 
         angle_45 = math.cos(math.pi/4)
 
         self.draw_red_pixel(origine.x, origine.y, 1)
         # produce axe shape
-        currentPoint = origine.copy().addVector(
+        currentPoint = Vector(self.center, self.center).addVector(
             Vector(
                 angle_45 * offset,
                 angle_45 * offset)
@@ -456,7 +457,7 @@ class Generator(Drawing):
         currentPoint = [currentPoint, Vector(currentPoint)]
         axeControlPoints = [[], []]
         axeAngle = [math.pi * 3/4, -math.pi/4]
-        axeOmega = [0, 0]
+        axeOmega = [0.08, -0.08]
         for axeProgress in float_range(0, axe_width, axeSampleStepSize):
             for side in range(2):
                 velocity = Vector(math.cos(axeAngle[side]), math.sin(axeAngle[side]))
@@ -479,7 +480,14 @@ class Generator(Drawing):
                 axeStep = Vector(velocity).multiplyScalar(axeSampleStepSize)
                 currentPoint[side].addVector(axeStep)
                 axeAngle[side] += axeOmega[side]
-        
+
+        for side in range(2):
+            controlPoints = axeControlPoints[side]
+            for i in range(len(controlPoints)):
+                controlPoints[i].addVector(Vector(
+                    origine.x - self.center,
+                    origine.y - self.center))
+
 
         # compute polygone
         poly_node = []
@@ -495,23 +503,27 @@ class Generator(Drawing):
         poly_node.append(origine.copy().addVector(mid_high.copy().addVector(Vector(angle_45 * body_width/2, angle_45 * body_width/2))))
         poly_node.append(origine.copy().addVector(mid_high.copy().addVector(Vector(-angle_45 * body_width/2, -angle_45 * body_width/2))))
 
+        if axeSymmetry2:
+            s1 = [Vector(self.drawing_bound.h - l.y, self.drawing_bound.w - l.x) for l in axeControlPoints[1][::-1]]
+            poly_node += s1
+            s2 = [Vector(self.drawing_bound.h - l.y, self.drawing_bound.w - l.x) for l in axeControlPoints[0]]
+            poly_node += s2
+            axeControlPoints.append(s1)
+            axeControlPoints.append(s2)
+
         poly = Polygon([p.to_coord() for p in poly_node])
 
+        # for i, p in enumerate(poly_node):
+        #     c = Color.hsv2rgb(int((i/len(poly_node))*360), 1, 1)
+        #     self.draw_pixel(p.x, p.y, c)
 
-        # for p in poly_node:
-        #     self.draw_pixel(p.x, p.y, Color(0, 0, 255))
-        # for l, r in zip(*axeControlPoints):
-        #     self.draw_red_pixel(l.x, l.y, 1)
-        #     self.draw_green_pixel(r.x, r.y, 1)
-
-        for x in range(self.turtle_bound.x, self.turtle_bound.w + self.turtle_bound.x):
-            for y in range(self.turtle_bound.y, self.turtle_bound.h + self.turtle_bound.y):
+        for x in range(self.drawing_bound.w):
+            for y in range(self.drawing_bound.h):
                 # find the minimum distance to the axe core
                 # OPT: obviously inefficient
                 coreDistanceSq = 100000
                 bestPoint = None
-                for side in range(2):
-                    controlPoints = axeControlPoints[side]
+                for controlPoints in axeControlPoints:
                     for i in range(len(controlPoints)):
                         distanceSq = controlPoints[i].distanceToSq(x, y)
                         if distanceSq < coreDistanceSq:
@@ -520,6 +532,7 @@ class Generator(Drawing):
                 coreDistance = math.sqrt(coreDistanceSq)
                 pt = Point(x, y)
                 if poly.contains(pt):
-                    darkAmt = coreDistance/ (offset)
+                    darkAmt = 0 if coreDistance<3 else 1 #/ (offset)
                     self.draw_pixel(x, y, Color.colorLerp(axeColorLight, axeColorDark, darkAmt))
+        return (axeColorLight, axeColorDark)
 
