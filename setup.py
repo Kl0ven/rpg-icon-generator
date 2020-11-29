@@ -10,7 +10,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="rpg_icon_generator",
-    version="0.2.0",
+    version="0.3.0",
     author="Jean-loup Monnier",
     author_email="jloup.m@gmail.com",
     description="This package generate RPG items images procedurallye",

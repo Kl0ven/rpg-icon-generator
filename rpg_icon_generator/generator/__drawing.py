@@ -25,7 +25,11 @@ class Drawing(object):
         self.image[x][y] = c
         r = draw.Rectangle(x, -y + self.dimension - 1, 1, 1, fill=c.to_hex(), fill_opacity=c.a)
         self.draw.append(r)
-    
+
+    def draw_pixel_safe(self, x, y, c):
+        if self.get_pixel_data(x, y).a == 0:
+            self.draw_pixel(x, y, c)
+
     def fill_rect(self, x, y, w, h, c):
         for i in range(round(x), round(x+w)):
             for j in range(round(y), round(y+h)):

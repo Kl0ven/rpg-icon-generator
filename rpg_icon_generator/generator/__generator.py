@@ -6,7 +6,7 @@ from rpg_icon_generator.utils.misc import float_range, floatLerp
 from rpg_icon_generator.generator.__drawing import Drawing
 from rpg_icon_generator.utils.random import Random
 from rpg_icon_generator.utils.bound import Bound
-from rpg_icon_generator.utils.constants import RARITY_COLOR, RARITY_RANGE
+from rpg_icon_generator.utils.constants import RARITY_COLOR, RARITY_RANGE, RARITY_COLOR_SECONDARY
 from shapely.geometry.polygon import Polygon
 from shapely.geometry import Point
 
@@ -23,8 +23,8 @@ class Generator(Drawing):
 
     def _get_turtle_bound_offset_from_complexity(self, c):
         out =  math.ceil((0.4 + ((-0.4 / 100) * c)) * self.dimension)
-        if out < 5:
-            out = 5
+        if out < 7:
+            out = 7
         return out
     def _draw_crossguard_helper(self, params):
         # the color of the xguard
@@ -385,27 +385,16 @@ class Generator(Drawing):
             if cplx[0] <= c <= cplx[1]:
                 return name
 
-    def _get_border_size_from_complexity(self, complexity):
-        rSpan = 100
-        min_border = 1
-        border_span = (self.dimension*0.25) - min_border
-
-        # Convert the left range into a 0-1 range (float)
-        valueScaled = float(complexity) / float(rSpan)
-
-        # Convert the 0-1 range into a value in the right range.
-        return int(min_border + (valueScaled * border_span))
-
     def _draw_rarity_border(self, complexity):
-        lighten_factor = 0.4
+        border_size = 3
+        lighten_factor = 0.6
         rarity = self._get_rarity_from_complexity(complexity)
-        border_size = self._get_border_size_from_complexity(complexity)
         master_color = Color(**RARITY_COLOR[rarity])
-        lighten_color = master_color.copy().colorLighten(lighten_factor)
+        secondary_color = Color(**RARITY_COLOR_SECONDARY[rarity])
+        lighten_color = master_color.copy()
         colors = [lighten_color]
         for i in range(1, border_size):
-            c = master_color.copy().colorLighten(lighten_factor - (i * (lighten_factor/(border_size + 1))))
-            c.a -= i * (1/(border_size + 1))
+            c = master_color.copy().colorLighten(i * (lighten_factor/(border_size + 1)))
             colors.append(c)
         width = self.drawing_bound.w
         height = self.drawing_bound.h
@@ -415,6 +404,45 @@ class Generator(Drawing):
                     pixel = self.get_pixel_data(x, y)
                     if pixel.a == 0 and (x == n or x == width - (1+n) or y == n or y == height - (1+n)):
                         self.draw_pixel(x, y, colors[n])
+        
+        self._draw_corner(colors, secondary_color, Vector(border_size, border_size), Vector(1, 1))
+        self._draw_corner(colors, secondary_color, Vector(self.drawing_bound.w - 1 - border_size, border_size), Vector(-1, 1))
+        self._draw_corner(colors, secondary_color, Vector(border_size, self.drawing_bound.h -1  - border_size), Vector(1, -1))
+        self._draw_corner(colors, secondary_color, Vector(self.drawing_bound.w - 1 - border_size, self.drawing_bound.h - 1 - border_size), Vector(-1, -1))
+
+    def _draw_corner(self, colors, secondary_color, pos, mult):
+        for x in range(3):
+            self.draw_pixel_safe(pos.x + (x*mult.x), pos.y, colors[-2])
+        for y in range(3):
+            self.draw_pixel_safe(pos.x, pos.y + (y*mult.y), colors[-2])
+        for x in range(4):
+            self.draw_pixel_safe(pos.x + (x*mult.x), pos.y + (3*mult.y), colors[-1])
+        for y in range(4):
+            self.draw_pixel_safe(pos.x + (3*mult.x), pos.y + (y*mult.y), colors[-1])
+
+        if mult.x == 1 and mult.y == 1:
+            offset = Vector(1, 2)
+        elif mult.x == -1 and mult.y == 1:
+            offset = Vector(-2, 2)
+        elif mult.x == 1 and mult.y == -1:
+            offset = Vector(1, -1)
+        elif mult.x == -1 and mult.y == -1:
+            offset = Vector(-2, -1)
+
+        self.draw_pixel_safe(pos.x + offset.x, pos.y + offset.y, secondary_color)
+        self.draw_pixel_safe(pos.x + offset.x, pos.y + offset.y - 1 , secondary_color)
+        self.draw_pixel_safe(pos.x + offset.x + 1 , pos.y + offset.y, secondary_color)
+        self.draw_pixel_safe(pos.x + offset.x + 1, pos.y + offset.y- 1, Color(255, 255, 255))
+
+        c = colors[-1].copy().colorLighten(0.2)
+        for x in range(4, int(self.center)):
+            self.draw_pixel_safe(pos.x + (x*mult.x), pos.y, c)
+        for y in range(4, int(self.center)):
+            self.draw_pixel_safe(pos.x, pos.y + (y*mult.y), c)
+
+        self.draw_pixel_safe(pos.x + (4*mult.x), pos.y + (1*mult.y), c)
+        self.draw_pixel_safe(pos.x + (1*mult.x), pos.y + (4*mult.y), c)
+
 
     def _draw_axe_blade_helper(self, origine, offset, body_width=5, body_heigth=10, axe_width=15):
         # the color of the axe
@@ -433,8 +461,6 @@ class Generator(Drawing):
         axeSymmetry2 = 0 if self.random.randomFloat() < 0.2 else 1
         # the thickness of the axe
         axeThickness = self.random.randomRangeFloatHigh(1, 2.5)
-        # the bottom taper of the axe
-        axeBottomTaper = self.random.randomFloat()
         # chance for the axe to acquire a curve (per pixel)
         axeOmegaChance = 0.6
         # max magnitude of axe omega add
