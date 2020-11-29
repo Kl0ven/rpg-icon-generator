@@ -1,3 +1,4 @@
+import copy
 import math
 
 class Vector:
@@ -68,3 +69,9 @@ class Vector:
             self.x = x
             self.y = y
         return self
+
+    def copy(self):
+        return copy.deepcopy(self)
+
+    def to_coord(self):
+        return (self.x, self.y)

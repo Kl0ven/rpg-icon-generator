@@ -6,7 +6,9 @@ from rpg_icon_generator.utils.misc import float_range, floatLerp
 from rpg_icon_generator.generator.__drawing import Drawing
 from rpg_icon_generator.utils.random import Random
 from rpg_icon_generator.utils.bound import Bound
-from rpg_icon_generator.utils.constants import RARITY_COLOR, RARITY_RANGE
+from rpg_icon_generator.utils.constants import RARITY_COLOR, RARITY_RANGE, RARITY_COLOR_SECONDARY
+from shapely.geometry.polygon import Polygon
+from shapely.geometry import Point
 
 class Generator(Drawing):
     def set_seed(self, s):
@@ -14,14 +16,15 @@ class Generator(Drawing):
     
     def set_drawing_bound(self, dimension, complexity):
         s = self._get_turtle_bound_offset_from_complexity(complexity)
+        self.center = self.dimension/2
         self.drawing_bound = Bound(0, 0, dimension, dimension)
         self.turtle_bound = Bound(s, s, dimension - 2*s, dimension - 2*s)
         self.dscale = self.turtle_bound.h / 32
 
     def _get_turtle_bound_offset_from_complexity(self, c):
         out =  math.ceil((0.4 + ((-0.4 / 100) * c)) * self.dimension)
-        if out < 5:
-            out = 5
+        if out < 7:
+            out = 7
         return out
     def _draw_crossguard_helper(self, params):
         # the color of the xguard
@@ -136,9 +139,6 @@ class Generator(Drawing):
         # wavelength of the hilt texture ( in diagonal pixels)
         hiltWavelength = max(2, math.ceil(
             self.random.randomRange(3, 6) * self.dscale))
-        # amplitude of the hilt wave
-        hiltWaveAmplitude = math.ceil(
-            self.random.randomRange(1, 3) * self.dscale)
         # the color of the hilt
         hiltColorLight = Color.hsv2rgb(self.random.randomRange(
             0, 360), self.random.randomFloat(), self.random.randomRangeFloat(0.7, 1))
@@ -171,6 +171,7 @@ class Generator(Drawing):
             for h in range(left, right+1):
                 darkenAmt = max(0, h + hiltRadius) / (hiltRadius*4)
                 self.draw_pixel(core.x + h, core.y + h, color.copy().colorDarken(darkenAmt))
+        return hiltRadius
 
     def _draw_blade_helper(self, startDiag):
         # determines the angle of the taper of the blade tip(as a ratio of the blade length)
@@ -384,27 +385,16 @@ class Generator(Drawing):
             if cplx[0] <= c <= cplx[1]:
                 return name
 
-    def _get_border_size_from_complexity(self, complexity):
-        rSpan = 100
-        min_border = 1
-        border_span = (self.dimension*0.25) - min_border
-
-        # Convert the left range into a 0-1 range (float)
-        valueScaled = float(complexity) / float(rSpan)
-
-        # Convert the 0-1 range into a value in the right range.
-        return int(min_border + (valueScaled * border_span))
-
     def _draw_rarity_border(self, complexity):
-        lighten_factor = 0.4
+        border_size = 3
+        lighten_factor = 0.6
         rarity = self._get_rarity_from_complexity(complexity)
-        border_size = self._get_border_size_from_complexity(complexity)
         master_color = Color(**RARITY_COLOR[rarity])
-        lighten_color = master_color.copy().colorLighten(lighten_factor)
+        secondary_color = Color(**RARITY_COLOR_SECONDARY[rarity])
+        lighten_color = master_color.copy()
         colors = [lighten_color]
         for i in range(1, border_size):
-            c = master_color.copy().colorLighten(lighten_factor - (i * (lighten_factor/(border_size + 1))))
-            c.a -= i * (1/(border_size + 1))
+            c = master_color.copy().colorLighten(i * (lighten_factor/(border_size + 1)))
             colors.append(c)
         width = self.drawing_bound.w
         height = self.drawing_bound.h
@@ -414,4 +404,161 @@ class Generator(Drawing):
                     pixel = self.get_pixel_data(x, y)
                     if pixel.a == 0 and (x == n or x == width - (1+n) or y == n or y == height - (1+n)):
                         self.draw_pixel(x, y, colors[n])
+        
+        self._draw_corner(colors, secondary_color, Vector(border_size, border_size), Vector(1, 1))
+        self._draw_corner(colors, secondary_color, Vector(self.drawing_bound.w - 1 - border_size, border_size), Vector(-1, 1))
+        self._draw_corner(colors, secondary_color, Vector(border_size, self.drawing_bound.h -1  - border_size), Vector(1, -1))
+        self._draw_corner(colors, secondary_color, Vector(self.drawing_bound.w - 1 - border_size, self.drawing_bound.h - 1 - border_size), Vector(-1, -1))
+
+    def _draw_corner(self, colors, secondary_color, pos, mult):
+        for x in range(3):
+            self.draw_pixel_safe(pos.x + (x*mult.x), pos.y, colors[-2])
+        for y in range(3):
+            self.draw_pixel_safe(pos.x, pos.y + (y*mult.y), colors[-2])
+        for x in range(4):
+            self.draw_pixel_safe(pos.x + (x*mult.x), pos.y + (3*mult.y), colors[-1])
+        for y in range(4):
+            self.draw_pixel_safe(pos.x + (3*mult.x), pos.y + (y*mult.y), colors[-1])
+
+        if mult.x == 1 and mult.y == 1:
+            offset = Vector(1, 2)
+        elif mult.x == -1 and mult.y == 1:
+            offset = Vector(-2, 2)
+        elif mult.x == 1 and mult.y == -1:
+            offset = Vector(1, -1)
+        elif mult.x == -1 and mult.y == -1:
+            offset = Vector(-2, -1)
+
+        self.draw_pixel_safe(pos.x + offset.x, pos.y + offset.y, secondary_color)
+        self.draw_pixel_safe(pos.x + offset.x, pos.y + offset.y - 1 , secondary_color)
+        self.draw_pixel_safe(pos.x + offset.x + 1 , pos.y + offset.y, secondary_color)
+        self.draw_pixel_safe(pos.x + offset.x + 1, pos.y + offset.y- 1, Color(255, 255, 255))
+
+        c = colors[-1].copy().colorLighten(0.2)
+        for x in range(4, int(self.center)):
+            self.draw_pixel_safe(pos.x + (x*mult.x), pos.y, c)
+        for y in range(4, int(self.center)):
+            self.draw_pixel_safe(pos.x, pos.y + (y*mult.y), c)
+
+        self.draw_pixel_safe(pos.x + (4*mult.x), pos.y + (1*mult.y), c)
+        self.draw_pixel_safe(pos.x + (1*mult.x), pos.y + (4*mult.y), c)
+
+
+    def _draw_axe_blade_helper(self, origine, offset, body_width=5, body_heigth=10, axe_width=15):
+        # the color of the axe
+        colorAxeLinearTipHsv = Color.hsv2rgb(
+            self.random.randomRangeFloat(0, 360),
+            self.random.randomFloatExtreme() * 0.6 if self.random.randomFloat() < 0.3 else 0,
+            self.random.randomRangeFloat(0.75, 1)
+        )
+        axeColorLight = colorAxeLinearTipHsv.copy().colorLighten(0.5)
+        # the shadow color of the axe
+        axeColorDark = colorAxeLinearTipHsv.copy().colorDarken(0.5)
+        # the amount of symmetry for the axe
+        axeSymmetry = 0 if self.random.randomFloat() < 0.3 else 1
+
+        # the amount of symmetry for the axe on second axis
+        axeSymmetry2 = 0 if self.random.randomFloat() < 0.2 else 1
+        # the thickness of the axe
+        axeThickness = self.random.randomRangeFloatHigh(1, 2.5)
+        # chance for the axe to acquire a curve (per pixel)
+        axeOmegaChance = 0.6
+        # max magnitude of axe omega add
+        axeOmegaAmount = math.pi/8
+        # maximum absolute axe omega
+        axeMaxOmega = ((axeThickness-1)**2 * math.pi/7)*0.2
+        # size of each step in sampling the axe curve
+        axeSampleStepSize = math.sqrt(2)
+        
+
+        angle_45 = math.cos(math.pi/4)
+
+        self.draw_red_pixel(origine.x, origine.y, 1)
+        # produce axe shape
+        currentPoint = Vector(self.center, self.center).addVector(
+            Vector(
+                angle_45 * offset,
+                angle_45 * offset)
+        )
+        currentPoint = [currentPoint, Vector(currentPoint)]
+        axeControlPoints = [[], []]
+        axeAngle = [math.pi * 3/4, -math.pi/4]
+        axeOmega = [0.08, -0.08]
+        for axeProgress in float_range(0, axe_width, axeSampleStepSize):
+            for side in range(2):
+                velocity = Vector(math.cos(axeAngle[side]), math.sin(axeAngle[side]))
+                newPoint = Vector(currentPoint[side])
+                if side == 1:
+                    symmetricPoint = Vector(
+                        currentPoint[0].y,
+                        currentPoint[0].x)
+                    newPoint.lerpTo(symmetricPoint, axeSymmetry)
+                newPoint.widthT = axeThickness/2
+                newPoint.widthB = axeThickness/2
+                newPoint.normal = Vector(velocity.y, -1 * velocity.x).multiplyScalar(side*2-1)
+                newPoint.dist = axeProgress
+                axeControlPoints[side].append(newPoint)
+            for side in range(2):
+                velocity = Vector(math.cos(axeAngle[side]), math.sin(axeAngle[side]))
+                if self.random.randomFloat() < axeOmegaChance:
+                    axeOmega[side] += self.random.randomRangeFloat(-axeOmegaAmount, axeOmegaAmount)
+                    axeOmega[side] = math.copysign(1, axeOmega[side]) * min(axeMaxOmega, abs(axeOmega[side]))
+                axeStep = Vector(velocity).multiplyScalar(axeSampleStepSize)
+                currentPoint[side].addVector(axeStep)
+                axeAngle[side] += axeOmega[side]
+
+        for side in range(2):
+            controlPoints = axeControlPoints[side]
+            for i in range(len(controlPoints)):
+                controlPoints[i].addVector(Vector(
+                    origine.x - self.center,
+                    origine.y - self.center))
+
+
+        # compute polygone
+        poly_node = []
+        mid_low = Vector(-angle_45 * body_heigth/2, angle_45 * body_heigth/2)
+        poly_node.append(origine.copy().addVector(mid_low.copy().addVector(Vector(-angle_45 * body_width/2, -angle_45 * body_width/2))))
+        poly_node.append(origine.copy().addVector(mid_low.copy().addVector(Vector(angle_45 * body_width/2, angle_45 * body_width/2))))
+
+        poly_node += axeControlPoints[0][::-1]
+        poly_node += axeControlPoints[1]
+
+
+        mid_high = Vector(angle_45 * body_heigth/2, -angle_45 * body_heigth/2)
+        poly_node.append(origine.copy().addVector(mid_high.copy().addVector(Vector(angle_45 * body_width/2, angle_45 * body_width/2))))
+        poly_node.append(origine.copy().addVector(mid_high.copy().addVector(Vector(-angle_45 * body_width/2, -angle_45 * body_width/2))))
+
+        if axeSymmetry2:
+            s1 = [Vector(self.drawing_bound.h - l.y, self.drawing_bound.w - l.x) for l in axeControlPoints[1][::-1]]
+            poly_node += s1
+            s2 = [Vector(self.drawing_bound.h - l.y, self.drawing_bound.w - l.x) for l in axeControlPoints[0]]
+            poly_node += s2
+            axeControlPoints.append(s1)
+            axeControlPoints.append(s2)
+
+        poly = Polygon([p.to_coord() for p in poly_node])
+
+        # for i, p in enumerate(poly_node):
+        #     c = Color.hsv2rgb(int((i/len(poly_node))*360), 1, 1)
+        #     self.draw_pixel(p.x, p.y, c)
+
+        for x in range(self.drawing_bound.w):
+            for y in range(self.drawing_bound.h):
+                # find the minimum distance to the axe core
+                # OPT: obviously inefficient
+                coreDistanceSq = 100000
+                bestPoint = None
+                for controlPoints in axeControlPoints:
+                    for i in range(len(controlPoints)):
+                        distanceSq = controlPoints[i].distanceToSq(x, y)
+                        if distanceSq < coreDistanceSq:
+                            coreDistanceSq = distanceSq
+                            bestPoint = controlPoints[i]
+                coreDistance = math.sqrt(coreDistanceSq)
+                pt = Point(x, y)
+                if poly.contains(pt):
+                    darkAmt = 0 if coreDistance<3 else 1 #/ (offset)
+                    self.draw_pixel(x, y, Color.colorLerp(axeColorLight, axeColorDark, darkAmt))
+        return (axeColorLight, axeColorDark)
 
