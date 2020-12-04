@@ -558,7 +558,15 @@ class Generator(Drawing):
                 coreDistance = math.sqrt(coreDistanceSq)
                 pt = Point(x, y)
                 if poly.contains(pt):
-                    darkAmt = 0 if coreDistance<3 else 1 #/ (offset)
+                    darkAmt = self.translate(coreDistance, 0, 5, 0, 1)
                     self.draw_pixel(x, y, Color.colorLerp(axeColorLight, axeColorDark, darkAmt))
         return (axeColorLight, axeColorDark)
 
+    def translate(self, value, leftMin, leftMax, rightMin, rightMax):
+        # Figure out how 'wide' each range is
+        leftSpan = leftMax - leftMin
+        rightSpan = rightMax - rightMin
+        # Convert the left range into a 0-1 range (float)
+        valueScaled = float(value - leftMin) / float(leftSpan)
+        # Convert the 0-1 range into a value in the right range.
+        return rightMin + (valueScaled * rightSpan)
