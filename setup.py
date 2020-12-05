@@ -2,7 +2,8 @@ import setuptools
 
 requirements = [
     "drawSvg==1.7.0",
-    "Shapely==1.7.1"
+    "Shapely==1.7.1",
+    "bezier==2020.5.19"
 ]
 
 with open("README.md", "r") as fh:
