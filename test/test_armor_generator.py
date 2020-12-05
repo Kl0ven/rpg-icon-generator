@@ -10,7 +10,8 @@ class Test_armor_generation(unittest.TestCase):
     def test_generation(self):
         generator = Armor_Generator()
         seed = datetime.now()
-        generator.generate(seed=seed, dimension=64, render_scale=2, output_directory='./test/out/', complexity=50)
+        seed = "2020-12-05 21:59:22.9672216"
+        generator.generate(seed=seed, dimension=64, render_scale=2, output_directory='./test/out/', complexity=0)
         self.assertTrue(os.path.isfile("./test/out/{}.png".format(seed)))
 
     def test_generation_chain(self):
