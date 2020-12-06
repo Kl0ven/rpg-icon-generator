@@ -368,13 +368,13 @@ class Generator(Drawing):
             for y in range(height):
                 pixel = self.get_pixel_data(x, y)
                 # if this pixel is empty or edge
-                if pixel.a == 0 or x == 0 or x == width - 1 or y == 0 or y == height - 1:
+                if pixel.a == 0 or x == 0 or x == width - 1 or y == 0 or y == height - 1 or pixel.is_black():
                     # and any orthogonal pixel isn't
                     nxPix = self.get_pixel_data(x-1, y)
                     nyPix = self.get_pixel_data(x, y-1)
                     pxPix = self.get_pixel_data(x+1, y)
                     pyPix = self.get_pixel_data(x, y+1)
-                    if x > 0 and nxPix.a > 0 or x < width - 2 and pxPix.a > 0 or y > 0 and nyPix.a > 0 or y < height - 2 and pyPix.a > 0:
+                    if x > 0 and not nxPix.is_empty(True) or x < width - 2 and not pxPix.is_empty(True) or y > 0 and not nyPix.is_empty(True) or y < height - 2 and not pyPix.is_empty(True):
                         border_pixels.append((x, y))
         
         for px, py in border_pixels:
