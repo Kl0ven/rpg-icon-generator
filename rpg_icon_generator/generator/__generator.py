@@ -368,13 +368,13 @@ class Generator(Drawing):
             for y in range(height):
                 pixel = self.get_pixel_data(x, y)
                 # if this pixel is empty or edge
-                if pixel.a == 0 or x == 0 or x == width - 1 or y == 0 or y == height - 1:
+                if pixel.a == 0 or x == 0 or x == width - 1 or y == 0 or y == height - 1 or pixel.is_black():
                     # and any orthogonal pixel isn't
                     nxPix = self.get_pixel_data(x-1, y)
                     nyPix = self.get_pixel_data(x, y-1)
                     pxPix = self.get_pixel_data(x+1, y)
                     pyPix = self.get_pixel_data(x, y+1)
-                    if x > 0 and nxPix.a > 0 or x < width - 2 and pxPix.a > 0 or y > 0 and nyPix.a > 0 or y < height - 2 and pyPix.a > 0:
+                    if x > 0 and not nxPix.is_empty(True) or x < width - 2 and not pxPix.is_empty(True) or y > 0 and not nyPix.is_empty(True) or y < height - 2 and not pyPix.is_empty(True):
                         border_pixels.append((x, y))
         
         for px, py in border_pixels:
@@ -558,7 +558,15 @@ class Generator(Drawing):
                 coreDistance = math.sqrt(coreDistanceSq)
                 pt = Point(x, y)
                 if poly.contains(pt):
-                    darkAmt = 0 if coreDistance<3 else 1 #/ (offset)
+                    darkAmt = self.translate(coreDistance, 0, 5, 0, 1)
                     self.draw_pixel(x, y, Color.colorLerp(axeColorLight, axeColorDark, darkAmt))
         return (axeColorLight, axeColorDark)
 
+    def translate(self, value, leftMin, leftMax, rightMin, rightMax):
+        # Figure out how 'wide' each range is
+        leftSpan = leftMax - leftMin
+        rightSpan = rightMax - rightMin
+        # Convert the left range into a 0-1 range (float)
+        valueScaled = float(value - leftMin) / float(leftSpan)
+        # Convert the 0-1 range into a value in the right range.
+        return rightMin + (valueScaled * rightSpan)

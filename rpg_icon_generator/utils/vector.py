@@ -15,6 +15,9 @@ class Vector:
 
     def __str__(self):
         return "Vector(x: {}, y: {})".format(self.x, self.y)
+    
+    def __repr__(self):
+        return str(self)
 
     def normalize(self):
         length = self.length()
@@ -75,3 +78,4 @@ class Vector:
 
     def to_coord(self):
         return (self.x, self.y)
+

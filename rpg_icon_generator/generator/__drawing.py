@@ -46,6 +46,8 @@ class Drawing(object):
         self.draw.append(r)
 
     def get_pixel_data(self, x, y):
+        x = round(x)
+        y = round(y)
         if x < 0 or x >= self.dimension or y < 0 or y >= self.dimension:
             return None
         c = self.image[x][y]
