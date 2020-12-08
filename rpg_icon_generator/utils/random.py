@@ -28,3 +28,6 @@ class Random:
 
     def randomRangeFloatHigh(self, min, max):
         return self.randomFloatHigh() * (max - min) + min
+
+    def choice(self, arr):
+        return random.choice(arr)
