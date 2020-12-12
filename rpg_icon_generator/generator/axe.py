@@ -11,7 +11,7 @@ class Axe_Generator(Generator):
         self.set_drawing_bound(dimension, complexity)
 
         # length of the pommel
-        pommelLength = math.ceil(self.random.randomFloatLow() * 2 * self.dscale)
+        pommelLength = math.ceil(self.random.float_low() * 2 * self.dscale)
 
         hiltStartDiag = math.floor((pommelLength * math.sqrt(2)))
 
@@ -27,10 +27,10 @@ class Axe_Generator(Generator):
         grip_size = self._draw_grip_helper(hiltParams)
 
         complexity_factor = (complexity/100) + 0.5
-        offset = self.random.randomRange(7, 12) * complexity_factor
-        body_width = self.random.randomRange(0, 6) + grip_size + 3
-        body_heigth = self.random.randomRange(4, 10) * complexity_factor
-        axe_width = self.random.randomRange(5, 15) * complexity_factor
+        offset = self.random.range(7, 12) * complexity_factor
+        body_width = self.random.range(0, 6) + grip_size + 3
+        body_heigth = self.random.range(4, 10) * complexity_factor
+        axe_width = self.random.range(5, 15) * complexity_factor
         dark_color, light_color = self._draw_axe_blade_helper(
             origine=Vector(
                 (self.turtle_bound.x + lengthDiag) - 2, 
