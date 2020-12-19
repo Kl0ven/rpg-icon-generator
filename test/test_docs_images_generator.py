@@ -1,5 +1,5 @@
 import unittest
-from rpg_icon_generator import Potion_Generator, Axe_Generator, Blade_Generator, Armor_Generator
+from rpg_icon_generator import Potion_Generator, Axe_Generator, Blade_Generator, Armor_Generator, Hammer_Generator
 from rpg_icon_generator.utils.constants import RARITY_RANGE
 from datetime import datetime
 import os.path
@@ -44,6 +44,16 @@ class Test_docs_images_generation(unittest.TestCase):
             generator.generate(seed=seed, dimension=64, render_scale=2, output_directory='./test/out/', complexity=c[0])
             self.assertTrue(os.path.isfile("./test/out/{}.png".format(seed)))
             seed = "armor_{}".format(c[1])
+            generator.generate(seed=seed, dimension=64, render_scale=2,output_directory='./test/out/', complexity=c[1])
+            self.assertTrue(os.path.isfile("./test/out/{}.png".format(seed)))
+
+    def test_docs_images_hammer(self):
+        generator = Hammer_Generator()
+        for name, c in RARITY_RANGE.items():
+            seed = "hammer_{}".format(c[0])
+            generator.generate(seed=seed, dimension=64, render_scale=2, output_directory='./test/out/', complexity=c[0])
+            self.assertTrue(os.path.isfile("./test/out/{}.png".format(seed)))
+            seed = "hammer_{}".format(c[1])
             generator.generate(seed=seed, dimension=64, render_scale=2,output_directory='./test/out/', complexity=c[1])
             self.assertTrue(os.path.isfile("./test/out/{}.png".format(seed)))
 if __name__ == '__main__':

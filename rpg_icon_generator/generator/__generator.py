@@ -7,6 +7,7 @@ from rpg_icon_generator.generator.__drawing import Drawing
 from rpg_icon_generator.utils.random import Random
 from rpg_icon_generator.utils.bound import Bound
 from rpg_icon_generator.utils.constants import RARITY_COLOR, RARITY_RANGE, RARITY_COLOR_SECONDARY
+from rpg_icon_generator.generator.__pattern_generator import Pattern_Generator
 from shapely.geometry.polygon import Polygon
 from shapely.geometry import Point
 
@@ -473,7 +474,7 @@ class Generator(Drawing):
 
         angle_45 = math.cos(math.pi/4)
 
-        self.draw_red_pixel(origine.x, origine.y, 1)
+        # self.draw_red_pixel(origine.x, origine.y, 1)
         # produce axe shape
         currentPoint = Vector(self.center, self.center).add_vector(
             Vector(
@@ -572,15 +573,122 @@ class Generator(Drawing):
         return rightMin + (valueScaled * rightSpan)
 
 
-    def _draw_mass_helper(self, origine, body_width=5, body_heigth=10):
+    def _draw_hammer_helper(self, origine, body_width=5, body_heigth=10):
         # the color of the axe
-        colorAxeLinearTipHsv = Color.hsv2rgb(
+        color_hammer_linear_tip_HSV = Color.hsv2rgb(
             self.random.range_float(0, 360),
             self.random.float_extreme() * 0.6 if self.random.float() < 0.3 else 0,
             self.random.range_float(0.75, 1)
         )
-        massColorLight = colorAxeLinearTipHsv.copy().lighten(0.5)
+        hammer_color_light = color_hammer_linear_tip_HSV.copy().lighten(0.5)
         # the shadow color of the axe
-        massColorDark = colorAxeLinearTipHsv.copy().darken(0.5)
-        
-        return (massColorLight, massColorDark)
+        hammer_color_dark = color_hammer_linear_tip_HSV.copy().darken(0.5)
+
+        hammer_face_offset = Vector(self.random.range(0, 5), self.random.range(3, 5)) 
+        angle_45 = math.cos(math.pi/4)
+
+
+        # cube
+        cube_node = []
+        mid_low = Vector(-angle_45 * body_heigth/2, angle_45 * body_heigth/2)
+        cube_node.append(origine.copy().add_vector(mid_low.copy().add_vector(Vector(-angle_45 * body_width/2, -angle_45 * body_width/2))))
+        cube_node.append(origine.copy().add_vector(mid_low.copy().add_vector(Vector(angle_45 * body_width/2, angle_45 * body_width/2))))
+        mid_high = Vector(angle_45 * body_heigth/2, -angle_45 * body_heigth/2)
+        cube_node.append(origine.copy().add_vector(mid_high.copy().add_vector(Vector(angle_45 * body_width/2, angle_45 * body_width/2))))
+        cube_node.append(origine.copy().add_vector(mid_high.copy().add_vector(Vector(-angle_45 * body_width/2, -angle_45 * body_width/2))))
+        self._draw_poly(cube_node, hammer_color_dark)
+
+        # bottom face
+        bottom_poly = []
+        pt = origine.copy().add_vector(mid_low.copy().add_vector(Vector(angle_45 * body_width/2, angle_45 * body_width/2)))
+        bottom_poly.append(pt)
+        bottom_poly.append(pt.copy().add_vector(hammer_face_offset.copy().rotate(math.pi/4)))
+        pt = origine.copy().add_vector(mid_high.copy().add_vector(Vector(angle_45 * body_width/2, angle_45 * body_width/2)))
+        bottom_poly.append(pt.copy().add_vector(Vector(hammer_face_offset.y, hammer_face_offset.x).rotate(-math.pi/4)))
+        bottom_poly.append(pt)
+        self._draw_poly(bottom_poly, hammer_color_light)
+
+        # top face
+        top_poly = []
+        pt = origine.copy().add_vector(mid_low.copy().add_vector(Vector(-angle_45 * body_width/2, -angle_45 * body_width/2)))
+        top_poly.append(pt)
+        top_poly.append(pt.copy().add_vector(Vector(hammer_face_offset.x, -1 * hammer_face_offset.y).rotate(math.pi/4)))
+        pt = origine.copy().add_vector(mid_high.copy().add_vector(Vector(-angle_45 * body_width/2, -angle_45 * body_width/2)))
+        top_poly.append(pt.copy().add_vector(Vector(-1 * hammer_face_offset.y, hammer_face_offset.x).rotate(-math.pi/4)))
+        top_poly.append(pt)
+        # self.debug_poly(top_poly)
+        self._draw_poly(top_poly, hammer_color_light)
+
+        self._draw_pattern_helper(cube_node[0].copy().round(), hammer_color_dark)
+        return (hammer_color_light, hammer_color_dark)
+
+    def _draw_pattern_helper(self, start, color):
+        cursor = start.copy()
+        move = Vector(1, -1)
+        move_down = Vector(1, 1)
+        dark_color = color.copy().darken(0.5)
+
+        w = self.__get_width(start.copy(), color.copy())
+        p = Pattern_Generator(w, self.random)
+        x = 0
+        y = 0
+
+        while True:
+            if self.get_pixel_data(cursor.x, cursor.y) == color:
+                if p.nodes[x].value:
+                    self.draw_pixel(cursor.x, cursor.y, dark_color)
+            cursor.add_vector(move)
+            x += 1
+            if self.get_pixel_data(cursor.x, cursor.y) != color:
+                # out of the box
+                cursor = start.add_vector(move_down).copy()
+                j = 0
+                pixel = self.get_pixel_data(cursor.x, cursor.y)
+                while pixel != color:
+                    cursor.add_vector(move)
+                    j += 1
+                    pixel = self.get_pixel_data(cursor.x, cursor.y)
+                    if pixel is None or j > 20:
+                        return
+                p.step()
+                y += 1
+                x = 0
+    
+    def __get_width(self, start, color):
+        move = Vector(1, -1)
+        move_down = Vector(1, 1)
+        cursor = start.copy()
+        w = 0
+        old_w = -1
+        while True:
+            w += 1
+            cursor.add_vector(move)
+            if self.get_pixel_data(cursor.x, cursor.y) != color:
+                cursor = start.add_vector(move_down).copy()
+                j = 0
+                while self.get_pixel_data(cursor.x, cursor.y) != color:
+                    cursor.add_vector(move)
+                    j += 1
+                    if j > 20:
+                        return
+                if w == old_w:
+                    return w + 2
+                old_w = w
+                w = 0
+
+    def _draw_poly(self, poly_points, color, overwrite=True):
+        poly = Polygon([p.to_coord() for p in poly_points])
+        for x in range(self.drawing_bound.w):
+            for y in range(self.drawing_bound.h):
+                pt = Point(x, y)
+                if poly.contains(pt):
+                    if overwrite:
+                        self.draw_pixel(x, y, color)
+                    else:
+                        self.draw_pixel_safe(x, y, color)
+
+    def debug_poly(self, poly_node):
+        for i, p in enumerate(poly_node):
+            c = Color.hsv2rgb(int((i/len(poly_node))*360), 1, 1)
+            self.draw_pixel(p.x, p.y, c)
+

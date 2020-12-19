@@ -4,7 +4,7 @@ import math
 from rpg_icon_generator.generator.__generator import Generator
 
 
-class Mass_Generator(Generator):
+class Hammer_Generator(Generator):
     def generate(self, seed, dimension, render_scale, output_directory, complexity):
         self.reset_canvas(dimension, render_scale, output_directory)
         self.set_seed(seed)
@@ -27,9 +27,9 @@ class Mass_Generator(Generator):
         grip_size = self._draw_grip_helper(hiltParams)
 
         complexity_factor = (complexity/100) + 0.5
-        body_width = self.random.range(0, 6) + grip_size + 3
-        body_heigth = self.random.range(4, 10) * complexity_factor
-        dark_color, light_color = self._draw_mass_helper(
+        body_width = (self.random.range(8, 20) + grip_size) * complexity_factor
+        body_heigth = self.random.range(8, 15) * complexity_factor
+        dark_color, light_color = self._draw_hammer_helper(
             origine=Vector(
                 (self.turtle_bound.x + lengthDiag) - 2, 
                 self.drawing_bound.h - ((self.turtle_bound.y + lengthDiag) - 2)),

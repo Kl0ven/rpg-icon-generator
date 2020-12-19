@@ -183,13 +183,3 @@ class Armor_Generator(Generator):
         self._draw_border()
         return [left_anchor, right_anchor, armpit_left, armpit_right, bottom_curve_start]
 
-    def _draw_poly(self, poly_points, color, overwrite=True):
-        poly = Polygon([p.to_coord() for p in poly_points])
-        for x in range(self.drawing_bound.w):
-            for y in range(self.drawing_bound.h):
-                pt = Point(x, y)
-                if poly.contains(pt):
-                    if overwrite:
-                        self.draw_pixel(x, y, color)
-                    else: 
-                        self.draw_pixel_safe(x, y, color)

@@ -62,6 +62,9 @@ class Color:
         color_240_rgb = list(map(lambda x: round(x * 255),colorsys.hls_to_rgb(deg_240_hue, l, s)))
         return [Color(*color_60_rgb), Color(*color_180_rgb), Color(*color_240_rgb)]
 
+    def __eq__(self, other):
+        return self.r == other.r and self.g == other.g and self.b == other.b and self.a == other.a
+
     @staticmethod
     def hsv2rgb(h, s, v):
         r, g, b = tuple(round(i * 255) for i in colorsys.hsv_to_rgb(h/360, s, v))

@@ -29,5 +29,11 @@ class Random:
     def range_float_high(self, min, max):
         return self.float_high() * (max - min) + min
 
-    def choice(self, arr):
-        return random.choice(arr)
+    def choice(self, arr, k=1):
+        if k == 1:
+            return random.sample(arr, k)[0]
+        else:
+            return random.sample(arr, k)
+    
+    def bool(self):
+        return bool(random.getrandbits(1))

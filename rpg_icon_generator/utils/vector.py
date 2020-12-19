@@ -79,3 +79,20 @@ class Vector:
     def to_coord(self):
         return (self.x, self.y)
 
+    def rotate(self, radians, origin=None):
+        origin = origin if origin is not None else Vector(0, 0)
+        x, y = self.x, self.y
+        offset_x, offset_y = origin.x, origin.y
+        adjusted_x = (x - offset_x)
+        adjusted_y = (y - offset_y)
+        cos_rad = math.cos(radians)
+        sin_rad = math.sin(radians)
+        self.x = offset_x + cos_rad * adjusted_x + sin_rad * adjusted_y
+        self.y = offset_y + -sin_rad * adjusted_x + cos_rad * adjusted_y
+
+        return self
+
+    def round(self):
+        self.x = round(self.x)
+        self.y = round(self.y)
+        return self
