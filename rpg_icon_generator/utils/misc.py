@@ -6,5 +6,5 @@ def float_range(start, stop, step):
         start += decimal.Decimal(step)
 
 
-def floatLerp(a, b, t):
+def float_lerp(a, b, t):
 	return (b - a) * t + a

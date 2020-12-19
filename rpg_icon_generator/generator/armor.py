@@ -17,32 +17,32 @@ class Armor_Generator(Generator):
 
         lower = int(self.turtle_bound.w*0.15)
         upper = int(self.turtle_bound.w*0.2)
-        shoulder_width = max(4, self.random.randomRange(lower, upper))
-        shoulder_height = max(4, self.random.randomRange(lower, upper))
-        armor_width = max(10, self.turtle_bound.w - self.random.randomRange(0, 6) - (2 * shoulder_width))
+        shoulder_width = max(4, self.random.range(lower, upper))
+        shoulder_height = max(4, self.random.range(lower, upper))
+        armor_width = max(10, self.turtle_bound.w - self.random.range(0, 6) - (2 * shoulder_width))
         if armor_width % 2 != 0:
             armor_width += 1
         armor_height = max(15 + shoulder_height, int(self.turtle_bound.h * 0.9))
         center = Vector((self.turtle_bound.w/2) + self.turtle_bound.x,
                         (self.turtle_bound.h/2) + self.turtle_bound.y)
         armor_color = Color.hsv2rgb(
-            self.random.randomRangeFloat(0, 360),
-            self.random.randomRangeFloat(0.3, 1) * 1 if self.random.randomFloat() < 0.9 else 0.1,
-            self.random.randomRangeFloat(0.75, 1)
+            self.random.range_float(0, 360),
+            self.random.range_float(0.3, 1) * 1 if self.random.float() < 0.9 else 0.1,
+            self.random.range_float(0.75, 1)
         )
         armor_secodary_color = self.random.choice(armor_color.get_tetradic())
-        neck_width = max(5, self.random.randomRange(int(armor_width*0.25), int(armor_width*0.5)))
-        neck_depth = self.random.randomRange(5, 10)
-        cape_height = self.random.randomRange(int(armor_height*0.1), int(armor_height*0.3))
+        neck_width = max(5, self.random.range(int(armor_width*0.25), int(armor_width*0.5)))
+        neck_depth = self.random.range(5, 10)
+        cape_height = self.random.range(int(armor_height*0.1), int(armor_height*0.3))
 
         # the amount of symmetry for the armor
-        armorSymmetry = 0 if self.random.randomFloat() < 0.2 else 1
+        armorSymmetry = 0 if self.random.float() < 0.2 else 1
 
-        bottom_radius = Vector(self.random.randomRange(5, int(armor_width*0.3)), 
-                            self.random.randomRange(5, int(armor_height*0.3)))
+        bottom_radius = Vector(self.random.range(5, int(armor_width*0.3)), 
+                            self.random.range(5, int(armor_height*0.3)))
         corners = []
         for multx, multy in product([-1, 1], repeat=2):
-            corners.append(center.copy().addVector(Vector(armor_width/2 * multx, armor_height/2 * multy)))
+            corners.append(center.copy().add_vector(Vector(armor_width/2 * multx, armor_height/2 * multy)))
 
         anchores = self._draw_armor(corners, shoulder_width, shoulder_height, bottom_radius,
                         armorSymmetry, center, neck_depth, neck_width, armor_color)
@@ -61,13 +61,13 @@ class Armor_Generator(Generator):
         for x in range(self.drawing_bound.w):
             pixel = self.get_pixel_data(x, bottom_anchor.y)
             if not pixel.is_empty(ignore_black=True):
-                self.draw_pixel(x, bottom_anchor.y, pixel.copy().colorDarken(dark_amount))
+                self.draw_pixel(x, bottom_anchor.y, pixel.copy().darken(dark_amount))
                 width += 1
 
         for y in range(0, int(bottom_anchor.y)):
             pixel = self.get_pixel_data(center.x, y)
             if not pixel.is_empty(ignore_black=True):
-                self.draw_pixel(center.x, y, pixel.copy().colorDarken(dark_amount))
+                self.draw_pixel(center.x, y, pixel.copy().darken(dark_amount))
                 height += 1
 
         height_6_packs = height - int(height*0.5)
@@ -78,11 +78,11 @@ class Armor_Generator(Generator):
                 # Right
                 pixel = self.get_pixel_data(center.x + dx, y)
                 if not pixel.is_empty(ignore_black=True):
-                    self.draw_pixel(center.x + dx, y, pixel.copy().colorDarken(dark_amount))
+                    self.draw_pixel(center.x + dx, y, pixel.copy().darken(dark_amount))
                 # Left
                 pixel = self.get_pixel_data(center.x - dx, y)
                 if not pixel.is_empty(ignore_black=True):
-                    self.draw_pixel(center.x - dx, y, pixel.copy().colorDarken(dark_amount))
+                    self.draw_pixel(center.x - dx, y, pixel.copy().darken(dark_amount))
             packs_width *= 0.8
             y -= min_height
 
@@ -90,26 +90,26 @@ class Armor_Generator(Generator):
     def _draw_shoulder_accent(self, corners, anchores, cape_height, shoulder_width, shoulder_height, armor_secodary_color):
         # left 
         poly_points = [anchores[0]]
-        poly_points.append(corners[0].copy().addVector(Vector(-shoulder_width, 0)))
-        poly_points.append(corners[0].copy().addVector(Vector(-shoulder_width, shoulder_height)))
+        poly_points.append(corners[0].copy().add_vector(Vector(-shoulder_width, 0)))
+        poly_points.append(corners[0].copy().add_vector(Vector(-shoulder_width, shoulder_height)))
         self._draw_poly(poly_points, armor_secodary_color)
 
         poly_points = []
-        poly_points.append(corners[0].copy().addVector(Vector(-shoulder_width+1, shoulder_height)))
+        poly_points.append(corners[0].copy().add_vector(Vector(-shoulder_width+1, shoulder_height)))
         poly_points.append(anchores[2])
-        poly_points.append(anchores[2].copy().addVector(Vector(0, cape_height)))
+        poly_points.append(anchores[2].copy().add_vector(Vector(0, cape_height)))
         self._draw_poly(poly_points, armor_secodary_color, overwrite=False)
 
         # right
         poly_points = [anchores[1]]
-        poly_points.append(corners[2].copy().addVector(Vector(shoulder_width, 0)))
-        poly_points.append(corners[2].copy().addVector(Vector(shoulder_width, shoulder_height)))
+        poly_points.append(corners[2].copy().add_vector(Vector(shoulder_width, 0)))
+        poly_points.append(corners[2].copy().add_vector(Vector(shoulder_width, shoulder_height)))
         self._draw_poly(poly_points, armor_secodary_color)
 
         poly_points = []
-        poly_points.append(corners[2].copy().addVector(Vector(shoulder_width-1, shoulder_height)))
+        poly_points.append(corners[2].copy().add_vector(Vector(shoulder_width-1, shoulder_height)))
         poly_points.append(anchores[3])
-        poly_points.append(anchores[3].copy().addVector(Vector(0, cape_height)))
+        poly_points.append(anchores[3].copy().add_vector(Vector(0, cape_height)))
         self._draw_poly(poly_points, armor_secodary_color, overwrite=False)
 
 
@@ -129,12 +129,12 @@ class Armor_Generator(Generator):
     def _draw_armor(self, corners, shoulder_width, shoulder_height, bottom_radius, armorSymmetry, center, neck_depth, neck_width, armor_color):
         poly_points = [corners[0]]
 
-        armpit_left = corners[0].copy().addVector(Vector(0, shoulder_height))
-        armpit_right = corners[2].copy().addVector(Vector(0, shoulder_height))
+        armpit_left = corners[0].copy().add_vector(Vector(0, shoulder_height))
+        armpit_right = corners[2].copy().add_vector(Vector(0, shoulder_height))
 
         # left shoulder
-        poly_points.append(corners[0].copy().addVector(Vector(-shoulder_width, 0)))
-        poly_points.append(corners[0].copy().addVector(Vector(-shoulder_width, shoulder_height)))
+        poly_points.append(corners[0].copy().add_vector(Vector(-shoulder_width, 0)))
+        poly_points.append(corners[0].copy().add_vector(Vector(-shoulder_width, shoulder_height)))
         poly_points.append(armpit_left)
 
         # bottom left curve
@@ -157,14 +157,14 @@ class Armor_Generator(Generator):
         
         # right shoulder
         poly_points.append(armpit_right)
-        poly_points.append(corners[2].copy().addVector(Vector(shoulder_width, shoulder_height)))
-        poly_points.append(corners[2].copy().addVector(Vector(shoulder_width, 0)))
+        poly_points.append(corners[2].copy().add_vector(Vector(shoulder_width, shoulder_height)))
+        poly_points.append(corners[2].copy().add_vector(Vector(shoulder_width, 0)))
         poly_points.append(corners[2])
 
         # neck
         center_neck = Vector(center.x, corners[2].y + neck_depth)
-        left_anchor = center_neck.copy().addVector(Vector(-neck_width/2, -neck_depth))
-        right_anchor = center_neck.copy().addVector(Vector(neck_width/2, -neck_depth))
+        left_anchor = center_neck.copy().add_vector(Vector(-neck_width/2, -neck_depth))
+        right_anchor = center_neck.copy().add_vector(Vector(neck_width/2, -neck_depth))
         poly_points += self.curve(right_anchor, left_anchor, center_neck)
 
         poly_points.append(left_anchor)
@@ -183,13 +183,3 @@ class Armor_Generator(Generator):
         self._draw_border()
         return [left_anchor, right_anchor, armpit_left, armpit_right, bottom_curve_start]
 
-    def _draw_poly(self, poly_points, color, overwrite=True):
-        poly = Polygon([p.to_coord() for p in poly_points])
-        for x in range(self.drawing_bound.w):
-            for y in range(self.drawing_bound.h):
-                pt = Point(x, y)
-                if poly.contains(pt):
-                    if overwrite:
-                        self.draw_pixel(x, y, color)
-                    else: 
-                        self.draw_pixel_safe(x, y, color)

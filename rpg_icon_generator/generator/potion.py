@@ -15,17 +15,17 @@ class Potion_Generator(Generator):
         centerXL = (width/2-1) + self.turtle_bound.x
 
         # height of bottle lip
-        lipHeight = math.ceil(self.random.randomRange(2, 5) * self.dscale)
+        lipHeight = math.ceil(self.random.range(2, 5) * self.dscale)
         # height of stopper sticking out of bottle
-        stopperTopHeight = math.ceil(self.random.randomRange(2, 5) * self.dscale)
+        stopperTopHeight = math.ceil(self.random.range(2, 5) * self.dscale)
         # depth of stopper into the bottle
-        stopperDepth = self.random.randomRange(lipHeight + 1, lipHeight + math.floor(4 * self.dscale))
+        stopperDepth = self.random.range(lipHeight + 1, lipHeight + math.floor(4 * self.dscale))
         # width of stopper inside bottle
-        stopperWidth = math.ceil(self.random.randomRange(2, 6) * self.dscale) * 2
+        stopperWidth = math.ceil(self.random.range(2, 6) * self.dscale) * 2
         # width of bottle neck
         neckWidth = stopperWidth + 2
         # width of bottle lip
-        lipWidth = neckWidth + math.ceil(self.random.randomRange(2, 4) * self.dscale) * 2
+        lipWidth = neckWidth + math.ceil(self.random.range(2, 4) * self.dscale) * 2
         # width of outer stopper
         stopperTopWidth = min(stopperWidth + 2, lipWidth - 2)
         # top of stopper
@@ -38,7 +38,7 @@ class Potion_Generator(Generator):
         bottleBottom = self.turtle_bound.y + height
         # fluid start
         fluidTop = neckTop + \
-            self.random.randomRangeFloat(height/8, (bottleBottom-neckTop)*0.6)
+            self.random.range_float(height/8, (bottleBottom-neckTop)*0.6)
         # min dist between contour changes
         contourInterval = math.floor(4 * self.dscale)
 
@@ -52,7 +52,7 @@ class Potion_Generator(Generator):
         glassDark = Color(163, 187, 199,  165/255)
 
         fluidColor = Color.random_color(self.random)
-        fluidColor2 = fluidColor.copy().colorRandomize(300, self.random)
+        fluidColor2 = fluidColor.copy().randomize(300, self.random)
 
         # generate shape of neck/body
         contour = [None for i in range(bottleBottom+1)]
@@ -65,15 +65,15 @@ class Potion_Generator(Generator):
             d = math.floor(velocity)
             velocity += acceleration
             contour[b] = max(neckWidth/2, min(width/2-2, contour[b-1]+d))
-            if b % contourInterval == 0 and self.random.randomFloat()<=0.5:
-                acceleration = direction * self.random.randomRange(0,5)/2
+            if b % contourInterval == 0 and self.random.float()<=0.5:
+                acceleration = direction * self.random.range(0,5)/2
                 direction = -direction
 
         # draw outer stopper
         stopperLeft = centerXL - stopperTopWidth/2 + 1
         for x in range(stopperTopWidth):
             n = (x / (stopperTopWidth - 1))-0.5
-            color = Color.colorLerp(stopperLight, stopperDark, n)
+            color = Color.lerp(stopperLight, stopperDark, n)
             self.fill_rect(int(x + stopperLeft), int(stopperTop), 1, int(stopperTopHeight), color)
         
         # draw body
@@ -86,12 +86,12 @@ class Potion_Generator(Generator):
                 vn = (y - fluidTop) / (bottleBottom - fluidTop)
                 left = int(centerXL - contourWidth/2)
                 for x in range(1, contourWidth):
-                    n = x/(contourWidth-1)-(0.5+self.random.randomFloat()*0.1)
-                    color = Color.colorLerp(
-                                Color.colorLerp(fluidColor, fluidColor2, vn),
-                                Color.colorLerp(
-                                    fluidColor.copy().colorDarken(1), 
-                                    fluidColor2.copy().colorDarken(1), 
+                    n = x/(contourWidth-1)-(0.5+self.random.float()*0.1)
+                    color = Color.lerp(
+                                Color.lerp(fluidColor, fluidColor2, vn),
+                                Color.lerp(
+                                    fluidColor.copy().darken(1), 
+                                    fluidColor2.copy().darken(1), 
                                     vn
                                 ),
                                 n
@@ -103,7 +103,7 @@ class Potion_Generator(Generator):
                 left = int(centerXL - contourWidth/2)
                 for x in range(1, contourWidth):
                     n = x/(contourWidth-1)
-                    color = Color.colorLerp(glassLight, glassDark, n)
+                    color = Color.lerp(glassLight, glassDark, n)
                     self.draw_pixel(left + x, y, color)
 
             if contourWidth == previousContour:
@@ -140,7 +140,7 @@ class Potion_Generator(Generator):
         stopperInnerLeft = centerXL - stopperWidth/2 + 1
         for x in range(stopperWidth):
             n = (x / (stopperWidth - 1))-0.5
-            c = Color.colorLerp(stopperLight, stopperDark, n)
+            c = Color.lerp(stopperLight, stopperDark, n)
             self.fill_rect(x + stopperInnerLeft, lipTop, 1, stopperDepth, c)
 
         # draw lip (over stopper)
@@ -149,14 +149,14 @@ class Potion_Generator(Generator):
         self.fill_rect(lipLeft + lipWidth - 1, lipTop, 1, lipHeight, innerBorderDark)
         for x in range(1, lipWidth-1):
             n = ((x-1) / (lipWidth-3))-0.5
-            self.fill_rect(x + lipLeft, lipTop, 1, lipHeight, Color.colorLerp(glassLight, glassDark, n))
+            self.fill_rect(x + lipLeft, lipTop, 1, lipHeight, Color.lerp(glassLight, glassDark, n))
 
         # draw bottom border
         borderLeft = centerXL - contour[bottleBottom] + 1
         borderWidth = int(contour[bottleBottom]*2)
         for x in range(borderWidth):
             n = (x/(borderWidth-1))-0.5
-            self.draw_pixel(borderLeft + x, bottleBottom, Color.colorLerp(innerBorderLight, innerBorderDark, n))
+            self.draw_pixel(borderLeft + x, bottleBottom, Color.lerp(innerBorderLight, innerBorderDark, n))
 
         self._draw_border()
         self._draw_rarity_border(complexity)
