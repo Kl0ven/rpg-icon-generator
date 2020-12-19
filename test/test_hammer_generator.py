@@ -4,7 +4,6 @@ from rpg_icon_generator.utils.constants import RARITY_RANGE
 from datetime import datetime
 import os.path
 import random
-from tqdm import tqdm
 
 class Test_hammer_generation(unittest.TestCase):
 
@@ -16,7 +15,7 @@ class Test_hammer_generation(unittest.TestCase):
 
     def test_generation_chain(self):
         generator = Hammer_Generator()
-        for i in tqdm(range(100)):
+        for i in range(10):
             seed = str(datetime.now()) + str(i)
             generator.generate(seed=seed, dimension=64, render_scale=2, output_directory='./test/out/', complexity=random.randrange(0, 101))
             self.assertTrue(os.path.isfile("./test/out/{}.png".format(seed)))
