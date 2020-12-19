@@ -27,6 +27,7 @@ jobs:
     name: Build and publish Python 🐍 distributions 📦 to PyPI and TestPyPI
     needs: Test
     runs-on: ubuntu-18.04
+    if: startsWith(github.ref, 'refs/heads/master')
     steps:
     - uses: actions/checkout@master
     - name: Set up Python 3.7
@@ -48,7 +49,6 @@ jobs:
         --outdir dist/
         .
     - name: Publish distribution 📦 to PyPI
-      if: startsWith(github.ref, 'refs/heads/master')
       uses: pypa/gh-action-pypi-publish@master
       with:
         password: ${{ secrets.pypi_password }}
