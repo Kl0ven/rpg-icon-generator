@@ -625,7 +625,7 @@ class Generator(Drawing):
     def _draw_pattern_helper(self, start, color):
         cursor = start.copy()
         move = Vector(1, -1)
-        move_down = Vector(1, 1)
+        move_down = Vector(0, 1)
         dark_color = color.copy().darken(0.5)
 
         w = self.__get_width(start.copy(), color.copy())
