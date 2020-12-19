@@ -642,13 +642,11 @@ class Generator(Drawing):
             if self.get_pixel_data(cursor.x, cursor.y) != color:
                 # out of the box
                 cursor = start.add_vector(move_down).copy()
-                j = 0
                 pixel = self.get_pixel_data(cursor.x, cursor.y)
                 while pixel != color:
                     cursor.add_vector(move)
-                    j += 1
                     pixel = self.get_pixel_data(cursor.x, cursor.y)
-                    if pixel is None or j > 20:
+                    if pixel is None:
                         return
                 p.step()
                 y += 1
